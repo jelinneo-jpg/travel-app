@@ -401,7 +401,7 @@ button {
 
 
 /* =========================
-   加进行程按钮
+   加进行程
 ========================= */
 
 .add-itinerary-button {
@@ -419,6 +419,15 @@ button {
   cursor: default;
 }
 
+.source-action-area {
+  margin-top: 9px;
+  padding: 0 2px;
+}
+
+.source-action-area button {
+  width: 100%;
+}
+
 
 /* =========================
    日期范围
@@ -429,6 +438,41 @@ button {
   color: #e28c65;
   font-size: 13px;
   font-weight: 700;
+}
+
+
+/* =========================
+   日期 / 时间
+========================= */
+
+.itinerary-date {
+  margin-top: 8px;
+  color: #e28c65;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.itinerary-time {
+  margin-top: 4px;
+  color: #e28c65;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+
+/* =========================
+   日期组
+========================= */
+
+.day {
+  margin-bottom: 20px;
+}
+
+.day-title {
+  margin: 18px 3px 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #8a7771;
 }
 
 
@@ -1022,6 +1066,8 @@ const DEFAULT_TRIPS = [
         id: 101,
         date: "2026-11-06",
         time: "10:00",
+        endTime: "",
+        endDate: "",
         icon: "✈️",
         name: "新加坡 → 香港",
         place: "香港机场",
@@ -1035,6 +1081,8 @@ const DEFAULT_TRIPS = [
         id: 102,
         date: "2026-11-06",
         time: "16:00",
+        endTime: "",
+        endDate: "",
         icon: "🏨",
         name: "酒店 Check-in",
         place: "九龙",
@@ -1048,6 +1096,8 @@ const DEFAULT_TRIPS = [
         id: 103,
         date: "2026-11-07",
         time: "19:00",
+        endTime: "",
+        endDate: "",
         icon: "🍜",
         name: "晚餐",
         place: "尖沙咀",
@@ -1061,9 +1111,11 @@ const DEFAULT_TRIPS = [
         id: 104,
         date: "2026-11-08",
         time: "12:30",
+        endTime: "13:30",
+        endDate: "",
         icon: "🚄",
         name: "香港 → 广州",
-        place: "香港西九龙",
+        place: "香港西九龙 → 广州南",
         member: "Tong",
         note: "高铁",
         link: "",
@@ -1119,6 +1171,68 @@ trips.forEach(trip => {
   if (!trip.expense) {
     trip.expense = [];
   }
+
+
+  /*
+    兼容旧版交通：
+    如果旧数据有 endDate，
+    现在不再使用。
+  */
+
+  trip.transport.forEach(item => {
+
+    if (
+      !item.startDate &&
+      item.date
+    ) {
+
+      item.startDate =
+        item.date;
+
+    }
+
+    /*
+      如果旧版本没有 startTime，
+      尝试使用旧 time。
+    */
+
+    if (
+      !item.startTime &&
+      item.time
+    ) {
+
+      item.startTime =
+        item.time;
+
+    }
+
+  });
+
+
+  /*
+    兼容旧版行程：
+    没有 endDate / endTime 时补空值。
+  */
+
+  trip.itinerary.forEach(item => {
+
+    if (
+      item.endDate === undefined
+    ) {
+
+      item.endDate = "";
+
+    }
+
+    if (
+      item.endTime === undefined
+    ) {
+
+      item.endTime = "";
+
+    }
+
+  });
 
 });
 
@@ -1567,7 +1681,7 @@ function formatDateRange(
 
     return `
       ${formatDate(start)}
-      → 
+      →
       ${formatDate(end)}
     `;
 
@@ -2321,6 +2435,7 @@ function renderGeneric(
           item.note || "",
           item.member || "",
           item.date || "",
+          item.time || "",
           item.startDate || "",
           item.endDate || ""
 
@@ -2522,24 +2637,67 @@ function renderItemView(
   let info = "";
 
 
+  /* =========================
+     行程详情
+  ========================= */
+
   if (
     type === "itinerary"
   ) {
 
-    info += item.date
-      ?
-      `📅 ${formatDate(item.date)}`
-      :
-      "";
+    if (
+      item.date ||
+      item.endDate
+    ) {
 
-    info += item.time
-      ?
-      `<br>⏰ ${escapeHTML(item.time)}`
-      :
-      "";
+      info += `
+        📅 ${
+          item.endDate
+          ?
+          formatDateRange(
+            item.date,
+            item.endDate
+          )
+          :
+          formatDate(
+            item.date
+          )
+        }
+      `;
+
+    }
+
+
+    if (
+      item.time ||
+      item.endTime
+    ) {
+
+      const timeText =
+        item.time &&
+        item.endTime
+        ?
+        `${escapeHTML(item.time)} → ${escapeHTML(item.endTime)}`
+        :
+        escapeHTML(
+          item.time ||
+          item.endTime ||
+          ""
+        );
+
+
+      info += `
+        <br>⏰ ${timeText}
+      `;
+
+    }
 
   }
 
+
+  /* =========================
+     酒店详情
+  ========================= */
 
   if (
     type === "hotel"
@@ -2562,19 +2720,83 @@ function renderItemView(
   }
 
 
+  /* =========================
+     交通详情
+     ★ 不显示到达日期
+  ========================= */
+
   if (
     type === "transport"
   ) {
 
     if (
-      item.startDate ||
-      item.endDate
+      item.startDate
     ) {
 
       info += `
-        📅 ${formatDateRange(
-          item.startDate,
-          item.endDate
+        📅 ${formatDate(
+          item.startDate
+        )}
+      `;
+
+    }
+
+
+    if (
+      item.startTime ||
+      item.endTime
+    ) {
+
+      const timeText =
+        item.startTime &&
+        item.endTime
+        ?
+        `${escapeHTML(item.startTime)} → ${escapeHTML(item.endTime)}`
+        :
+        escapeHTML(
+          item.startTime ||
+          item.endTime ||
+          ""
+        );
+
+
+      info += `
+        <br>⏰ ${timeText}
+      `;
+
+    }
+
+  }
+
+
+  /* =========================
+     美食 / 景点详情
+  ========================= */
+
+  if (
+    type === "places"
+  ) {
+
+    if (
+      item.date
+    ) {
+
+      info += `
+        📅 ${formatDate(
+          item.date
+        )}
+      `;
+
+    }
+
+
+    if (
+      item.time
+    ) {
+
+      info += `
+        <br>⏰ ${escapeHTML(
+          item.time
         )}
       `;
 
@@ -2702,7 +2924,13 @@ function renderItemView(
   `;
 
 
+  /*
+    交通：
+    不显示网页链接。
+  */
+
   if (
+    type !== "transport" &&
     item.link
   ) {
 
@@ -2918,6 +3146,7 @@ function editItemFromView(
 
 /* =========================================================
    加进行程
+   ★ 酒店 / 交通 / 美食景点
 ========================================================= */
 
 function addToItinerary(
@@ -2979,47 +3208,22 @@ function addToItinerary(
   }
 
 
-  let date =
-    trip.startDate || "";
-
-  let time = "";
-
-
-  if (
-    type === "hotel" ||
-    type === "transport"
-  ) {
-
-    date =
-      source.startDate ||
-      source.date ||
-      trip.startDate ||
-      "";
-
-  }
-
-  else {
-
-    date =
-      source.date ||
-      trip.startDate ||
-      "";
-
-    time =
-      source.time ||
-      "";
-
-  }
-
-
-  const itineraryItem = {
+  let itineraryItem = {
 
     id:
       createId(),
 
-    date,
+    date:
+      trip.startDate || "",
 
-    time,
+    time:
+      "",
+
+    endDate:
+      "",
+
+    endTime:
+      "",
 
     icon:
       source.icon ||
@@ -3042,7 +3246,6 @@ function addToItinerary(
       "",
 
     link:
-      source.link ||
       "",
 
     map:
@@ -3058,29 +3261,109 @@ function addToItinerary(
   };
 
 
+  /* =========================
+     酒店 → 行程
+  ========================= */
+
+  if (
+    type === "hotel"
+  ) {
+
+    itineraryItem.date =
+      source.startDate ||
+      source.checkIn ||
+      source.date ||
+      trip.startDate ||
+      "";
+
+    itineraryItem.endDate =
+      source.endDate ||
+      source.checkOut ||
+      "";
+
+    itineraryItem.time =
+      "";
+
+    itineraryItem.endTime =
+      "";
+
+  }
+
+
+  /* =========================
+     交通 → 行程
+  ========================= */
+
+  else if (
+    type === "transport"
+  ) {
+
+    itineraryItem.date =
+      source.startDate ||
+      source.date ||
+      trip.startDate ||
+      "";
+
+    itineraryItem.time =
+      source.startTime ||
+      source.departTime ||
+      source.time ||
+      "";
+
+    itineraryItem.endTime =
+      source.endTime ||
+      source.arriveTime ||
+      "";
+
+    /*
+      交通没有到达日期
+    */
+
+    itineraryItem.endDate =
+      "";
+
+    /*
+      交通不复制网页链接
+    */
+
+    itineraryItem.link =
+      "";
+
+  }
+
+
+  /* =========================
+     美食 / 景点 → 行程
+  ========================= */
+
+  else if (
+    type === "places"
+  ) {
+
+    itineraryItem.date =
+      source.date ||
+      trip.startDate ||
+      "";
+
+    itineraryItem.time =
+      source.time ||
+      "";
+
+    itineraryItem.endDate =
+      "";
+
+    itineraryItem.endTime =
+      "";
+
+  }
+
+
   trip.itinerary.push(
     itineraryItem
   );
 
 
   saveTrips();
-
-
-  /*
-    如果用户是在详情页按，
-    就留在详情页。
-  */
-
-  if (
-    viewingId !== null &&
-    viewingType === type
-  ) {
-
-    renderTrip();
-
-    return;
-
-  }
 
 
   renderTrip();
@@ -3090,7 +3373,7 @@ function addToItinerary(
 
 /* =========================================================
    Render Item
-   ★ 列表卡片现在完全 View-only
+   ★ 列表卡片完全 View-only
 ========================================================= */
 
 function renderItem(
@@ -3134,91 +3417,43 @@ function renderItem(
   }
 
 
-  let dateArea = "";
-
-
-  if (
-    type === "hotel"
-  ) {
-
-    if (
-      item.startDate ||
-      item.endDate
-    ) {
-
-      dateArea = `
-
-        <div class="date-range">
-
-          📅 ${formatDateRange(
-            item.startDate,
-            item.endDate
-          )}
-
-        </div>
-
-      `;
-
-    }
-
-  }
-
-
-  else if (
-    type === "transport"
-  ) {
-
-    if (
-      item.startDate ||
-      item.endDate
-    ) {
-
-      dateArea = `
-
-        <div class="date-range">
-
-          📅 ${formatDateRange(
-            item.startDate,
-            item.endDate
-          )}
-
-        </div>
-
-      `;
-
-    }
-
-  }
-
-
-  else if (
-    type === "places"
-  ) {
-
-    if (
-      item.date
-    ) {
-
-      dateArea = `
-
-        <div class="date-range">
-
-          📅 ${formatDate(
-            item.date
-          )}
-
-        </div>
-
-      `;
-
-    }
-
-  }
-
+  /* =========================
+     行程
+  ========================= */
 
   if (
     type === "itinerary"
   ) {
+
+    const dateText =
+      item.endDate
+      ?
+      formatDateRange(
+        item.date,
+        item.endDate
+      )
+      :
+      (
+        item.date
+        ?
+        formatDate(item.date)
+        :
+        ""
+      );
+
+
+    const timeText =
+      item.time &&
+      item.endTime
+      ?
+      `${escapeHTML(item.time)} → ${escapeHTML(item.endTime)}`
+      :
+      escapeHTML(
+        item.time ||
+        item.endTime ||
+        ""
+      );
+
 
     return `
 
@@ -3246,26 +3481,37 @@ function renderItem(
 
           </div>
 
-
-          ${
-            item.time
-            ?
-            `
-
-              <div class="item-time">
-
-                ${escapeHTML(
-                  item.time
-                )}
-
-              </div>
-
-            `
-            :
-            ""
-          }
-
         </div>
+
+
+        ${
+          dateText
+          ?
+          `
+            <div class="itinerary-date">
+
+              📅 ${dateText}
+
+            </div>
+          `
+          :
+          ""
+        }
+
+
+        ${
+          timeText
+          ?
+          `
+            <div class="itinerary-time">
+
+              ⏰ ${timeText}
+
+            </div>
+          `
+          :
+          ""
+        }
 
 
         <div class="item-info">
@@ -3277,21 +3523,6 @@ function renderItem(
               📍
               ${escapeHTML(
                 item.place
-              )}
-            `
-            :
-            ""
-          }
-
-
-          ${
-            item.member
-            ?
-            `
-              <br>
-              👤
-              ${escapeHTML(
-                item.member
               )}
             `
             :
@@ -3343,11 +3574,147 @@ function renderItem(
   }
 
 
-  /*
-    酒店 / 交通 / 美食景点：
-    整张卡片查看，
-    但「📅 加进行程」放在卡片外层按钮区。
-  */
+  /* =========================
+     酒店
+  ========================= */
+
+  let dateArea = "";
+
+
+  if (
+    type === "hotel"
+  ) {
+
+    if (
+      item.startDate ||
+      item.endDate
+    ) {
+
+      dateArea = `
+
+        <div class="date-range">
+
+          📅 ${formatDateRange(
+            item.startDate,
+            item.endDate
+          )}
+
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  /* =========================
+     交通
+  ========================= */
+
+  else if (
+    type === "transport"
+  ) {
+
+    if (
+      item.startDate
+    ) {
+
+      dateArea = `
+
+        <div class="date-range">
+
+          📅 ${formatDate(
+            item.startDate
+          )}
+
+        </div>
+
+      `;
+
+    }
+
+
+    if (
+      item.startTime ||
+      item.endTime
+    ) {
+
+      const timeText =
+        item.startTime &&
+        item.endTime
+        ?
+        `${escapeHTML(item.startTime)} → ${escapeHTML(item.endTime)}`
+        :
+        escapeHTML(
+          item.startTime ||
+          item.endTime ||
+          ""
+        );
+
+
+      dateArea += `
+
+        <div class="itinerary-time">
+
+          ⏰ ${timeText}
+
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  /* =========================
+     美食景点
+  ========================= */
+
+  else if (
+    type === "places"
+  ) {
+
+    if (
+      item.date
+    ) {
+
+      dateArea = `
+
+        <div class="date-range">
+
+          📅 ${formatDate(
+            item.date
+          )}
+
+        </div>
+
+      `;
+
+    }
+
+
+    if (
+      item.time
+    ) {
+
+      dateArea += `
+
+        <div class="itinerary-time">
+
+          ⏰ ${escapeHTML(
+            item.time
+          )}
+
+        </div>
+
+      `;
+
+    }
+
+  }
+
 
   const alreadyExists =
     (trip?.itinerary || [])
@@ -3398,6 +3765,12 @@ function renderItem(
 
     `;
 
+
+  /*
+    重点：
+    卡片本身只有查看功能。
+    加进行程按钮单独放在下面。
+  */
 
   return `
 
@@ -3489,17 +3862,8 @@ function renderItem(
 
 
       <div
-        class="item-actions"
-        onclick="event.stopPropagation();">
-
-        ${addButton}
-
-      </div>
-
-
-      <div
         style="
-          margin-top:5px;
+          margin-top:10px;
           color:#b19f98;
           font-size:11px;
         ">
@@ -3507,6 +3871,13 @@ function renderItem(
         点击查看详情 →
 
       </div>
+
+    </div>
+
+
+    <div class="source-action-area">
+
+      ${addButton}
 
     </div>
 
@@ -4401,6 +4772,10 @@ function buildForm(
   }
 
 
+  /* =========================
+     行程
+  ========================= */
+
   if (
     type === "itinerary"
   ) {
@@ -4428,6 +4803,30 @@ function buildForm(
         id="fTime"
         value="${
           item?.time || ""
+        }">
+
+
+      <label>
+        结束日期（可选）
+      </label>
+
+      <input
+        type="date"
+        id="fEndDate"
+        value="${
+          item?.endDate || ""
+        }">
+
+
+      <label>
+        结束时间（可选）
+      </label>
+
+      <input
+        type="time"
+        id="fEndTime"
+        value="${
+          item?.endTime || ""
         }">
 
 
@@ -4519,6 +4918,10 @@ function buildForm(
 
   }
 
+
+  /* =========================
+     酒店
+  ========================= */
 
   if (
     type === "hotel"
@@ -4642,6 +5045,12 @@ function buildForm(
   }
 
 
+  /* =========================
+     交通
+     ★ 没有到达日期
+     ★ 没有网页链接
+  ========================= */
+
   if (
     type === "transport"
   ) {
@@ -4654,22 +5063,36 @@ function buildForm(
 
       <input
         id="fName"
-        placeholder="例如：香港 → 广州 高铁"
+        placeholder="例如：香港 → 广州"
         value="${escapeHTML(
           item?.name || ""
         )}">
 
 
       <label>
-        地点 / 车站
+        地点 / 路线
       </label>
 
       <input
         id="fPlace"
-        placeholder="例如：香港西九龙"
+        placeholder="例如：香港西九龙 → 广州南"
         value="${escapeHTML(
           item?.place || ""
         )}">
+
+
+      <label>
+        出发日期
+      </label>
+
+      <input
+        type="date"
+        id="fStartDate"
+        value="${
+          item?.startDate ||
+          item?.date ||
+          ""
+        }">
 
 
       <div class="form-row">
@@ -4677,15 +5100,15 @@ function buildForm(
         <div>
 
           <label>
-            出发日期
+            出发时间
           </label>
 
           <input
-            type="date"
-            id="fStartDate"
+            type="time"
+            id="fStartTime"
             value="${
-              item?.startDate ||
-              item?.date ||
+              item?.startTime ||
+              item?.time ||
               ""
             }">
 
@@ -4695,14 +5118,15 @@ function buildForm(
         <div>
 
           <label>
-            到达日期
+            到达时间
           </label>
 
           <input
-            type="date"
-            id="fEndDate"
+            type="time"
+            id="fEndTime"
             value="${
-              item?.endDate ||
+              item?.endTime ||
+              item?.arriveTime ||
               ""
             }">
 
@@ -4735,19 +5159,6 @@ function buildForm(
 
 
       <label>
-        网页链接
-      </label>
-
-      <input
-        id="fLink"
-        type="url"
-        placeholder="https://..."
-        value="${escapeHTML(
-          item?.link || ""
-        )}">
-
-
-      <label>
         Google Maps 链接
       </label>
 
@@ -4763,6 +5174,10 @@ function buildForm(
 
   }
 
+
+  /* =========================
+     美食景点
+  ========================= */
 
   if (
     type === "places"
@@ -4794,16 +5209,40 @@ function buildForm(
         )}">
 
 
-      <label>
-        日期
-      </label>
+      <div class="form-row">
 
-      <input
-        type="date"
-        id="fDate"
-        value="${
-          item?.date || ""
-        }">
+        <div>
+
+          <label>
+            日期
+          </label>
+
+          <input
+            type="date"
+            id="fDate"
+            value="${
+              item?.date || ""
+            }">
+
+        </div>
+
+
+        <div>
+
+          <label>
+            时间
+          </label>
+
+          <input
+            type="time"
+            id="fTime"
+            value="${
+              item?.time || ""
+            }">
+
+        </div>
+
+      </div>
 
 
       <label>
@@ -5184,6 +5623,16 @@ function saveItem() {
           "fTime"
         ).value,
 
+      endDate:
+        document.getElementById(
+          "fEndDate"
+        ).value,
+
+      endTime:
+        document.getElementById(
+          "fEndTime"
+        ).value,
+
       icon:
         document.getElementById(
           "fIcon"
@@ -5310,6 +5759,8 @@ function saveItem() {
 
   /* =========================
      交通
+     ★ 没有 endDate
+     ★ 没有 link
   ========================= */
 
   else if (
@@ -5337,9 +5788,14 @@ function saveItem() {
           "fStartDate"
         ).value,
 
-      endDate:
+      startTime:
         document.getElementById(
-          "fEndDate"
+          "fStartTime"
+        ).value,
+
+      endTime:
+        document.getElementById(
+          "fEndTime"
         ).value,
 
       member:
@@ -5352,15 +5808,13 @@ function saveItem() {
           "fNote"
         ).value.trim(),
 
-      link:
-        document.getElementById(
-          "fLink"
-        ).value.trim(),
-
       map:
         document.getElementById(
           "fMap"
-        ).value.trim()
+        ).value.trim(),
+
+      link:
+        ""
 
     };
 
@@ -5394,6 +5848,11 @@ function saveItem() {
       date:
         document.getElementById(
           "fDate"
+        ).value,
+
+      time:
+        document.getElementById(
+          "fTime"
         ).value,
 
       member:
@@ -5580,12 +6039,6 @@ function saveItem() {
 
     if (index !== -1) {
 
-      /*
-        如果编辑酒店/交通，
-        不会自动修改已经加入的行程，
-        避免用户之前手动调整过行程后被覆盖。
-      */
-
       trip[type][index] =
         item;
 
@@ -5681,9 +6134,8 @@ async function deleteItem(
 
 
   /*
-    如果删除酒店 / 交通 / 美食景点，
-    同时解除对应行程的 source 关系，
-    但不删除行程本身。
+    删除酒店 / 交通 / 美食景点时，
+    对应的已加入行程也一起解除 source 关系。
   */
 
   if (
