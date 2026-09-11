@@ -5102,8 +5102,55 @@ function openModal(
 ========================================================= */
 
 function openExpenseModal(
-  itineraryId
+  itineraryId = null
 ) {
+
+  const trip =
+    getCurrentTrip();
+
+  if (!trip) return;
+
+  editingId = null;
+
+  editingType =
+    "expense";
+
+  expenseItineraryId =
+    itineraryId;
+
+  const itinerary =
+    itineraryId != null
+      ? (trip.itinerary || []).find(
+          item =>
+            String(item.id) ===
+            String(itineraryId)
+        )
+      : null;
+
+  document.getElementById(
+    "modalTitle"
+  ).textContent =
+    "添加费用";
+
+  document.getElementById(
+    "formArea"
+  ).innerHTML =
+    buildExpenseForm(
+      null,
+      trip,
+      itinerary
+    );
+
+  document.getElementById(
+    "saveButton"
+  ).onclick =
+    saveItem;
+
+  document.getElementById(
+    "modalOverlay"
+  ).classList.add("show");
+
+}
 
   const trip =
     getCurrentTrip();
