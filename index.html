@@ -6744,13 +6744,19 @@ function renderExpense(
 
   let html = `
 
-    <div class="section-header">
+<div class="section-header">
+  <h2>
+    💰 费用
+  </h2>
 
-      <h2>
-        💰 费用
-      </h2>
-
-    </div>
+  <button
+    class="add-button"
+    onclick="
+      openExpenseModal()
+    ">
+    ＋ 添加费用
+  </button>
+</div>
 
 
     <div class="expense-hint">
