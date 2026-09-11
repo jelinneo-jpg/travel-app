@@ -1659,7 +1659,14 @@ function saveTrips() {
   );
 
 }
+function saveTrips() {
 
+  localStorage.setItem(
+    "travelTrips",
+    JSON.stringify(trips)
+  );
+
+}
 
 /* =========================================================
    ID
