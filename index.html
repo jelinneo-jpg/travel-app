@@ -1,0 +1,1177 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f3a77f">
+<title>我们的旅行 ✈️</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #fff9f5;
+  color: #4d4140;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app {
+  max-width: 900px;
+  margin: auto;
+  padding-bottom: 100px;
+}
+
+/* =========================
+   顶部
+========================= */
+
+.header {
+  padding: 28px 18px 16px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.header-subtitle {
+  margin-top: 5px;
+  color: #968783;
+  font-size: 14px;
+}
+
+/* =========================
+   旅行卡片
+========================= */
+
+.trip-card {
+  margin: 0 16px 16px;
+  padding: 23px;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #fff, #fff0e7);
+  border: 1px solid #f2ddd2;
+  box-shadow: 0 10px 30px rgba(120, 80, 60, 0.08);
+}
+
+.trip-title {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.trip-date {
+  margin-top: 7px;
+  color: #968783;
+  font-size: 14px;
+}
+
+.member-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 17px;
+}
+
+.member {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: white;
+  border: 1px solid #efd9ce;
+  font-size: 13px;
+}
+
+/* =========================
+   Tabs
+========================= */
+
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  display: flex;
+  gap: 8px;
+
+  padding: 7px 16px 12px;
+
+  overflow-x: auto;
+
+  background: rgba(255, 249, 245, 0.96);
+  backdrop-filter: blur(10px);
+}
+
+.tab {
+  flex-shrink: 0;
+
+  border: 1px solid #efdcd3;
+  background: white;
+
+  color: #8c7d79;
+
+  padding: 10px 14px;
+  border-radius: 14px;
+}
+
+.tab.active {
+  color: white;
+  background: #efa37c;
+  border-color: #efa37c;
+}
+
+/* =========================
+   Content
+========================= */
+
+.content {
+  padding: 0 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin: 18px 2px 12px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.add-button {
+  border: 0;
+  background: #efa37c;
+  color: white;
+
+  padding: 10px 14px;
+  border-radius: 13px;
+
+  font-weight: 700;
+}
+
+/* =========================
+   行程
+========================= */
+
+.day {
+  margin-bottom: 22px;
+}
+
+.day-title {
+  margin: 10px 2px;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.item {
+  margin: 9px 0;
+  padding: 15px;
+
+  background: white;
+  border: 1px solid #f0ded5;
+  border-radius: 18px;
+
+  box-shadow: 0 7px 22px rgba(120, 80, 60, 0.06);
+}
+
+.item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.item-name {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.item-time {
+  color: #e28c65;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.item-info {
+  margin-top: 8px;
+
+  color: #8c7d79;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  margin-top: 12px;
+}
+
+.action-button,
+.link-button {
+  display: inline-block;
+
+  padding: 8px 10px;
+
+  border-radius: 10px;
+
+  border: 1px solid #efddd3;
+  background: white;
+
+  color: #665957;
+  text-decoration: none;
+
+  font-size: 13px;
+}
+
+.link-button {
+  background: #fff2e9;
+  color: #c9744f;
+}
+
+.delete-button {
+  color: #d76c6c;
+}
+
+/* =========================
+   卡片
+========================= */
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.info-card {
+  padding: 16px;
+
+  background: white;
+  border: 1px solid #efddd4;
+  border-radius: 18px;
+}
+
+.info-icon {
+  font-size: 25px;
+}
+
+.info-card-title {
+  margin-top: 7px;
+  font-weight: 800;
+}
+
+.info-card-text {
+  margin-top: 5px;
+
+  color: #91837f;
+  font-size: 13px;
+}
+
+/* =========================
+   空白
+========================= */
+
+.empty {
+  padding: 38px 15px;
+
+  text-align: center;
+
+  color: #978984;
+
+  background: white;
+  border: 1px dashed #ead7ce;
+  border-radius: 18px;
+}
+
+/* =========================
+   Modal
+========================= */
+
+.modal-overlay {
+  display: none;
+
+  position: fixed;
+  inset: 0;
+
+  z-index: 100;
+
+  padding: 18px;
+
+  align-items: flex-end;
+  justify-content: center;
+
+  background: rgba(50, 35, 30, 0.38);
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal {
+  width: min(650px, 100%);
+  max-height: 92vh;
+
+  overflow-y: auto;
+
+  padding: 21px;
+
+  background: white;
+
+  border-radius: 25px 25px 17px 17px;
+}
+
+.modal-title {
+  margin: 0 0 16px;
+
+  font-size: 21px;
+  font-weight: 800;
+}
+
+label {
+  display: block;
+
+  margin: 12px 0 6px;
+
+  color: #8d7e79;
+  font-size: 13px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+
+  padding: 12px;
+
+  border: 1px solid #ead9d1;
+  border-radius: 12px;
+
+  background: #fffaf7;
+  color: #4d4140;
+
+  outline: none;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #efa37c;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  margin-top: 18px;
+}
+
+.cancel-button,
+.save-button {
+  padding: 11px 15px;
+  border-radius: 12px;
+}
+
+.cancel-button {
+  border: 1px solid #ead9d1;
+  background: white;
+}
+
+.save-button {
+  border: 0;
+  background: #efa37c;
+  color: white;
+  font-weight: 700;
+}
+
+/* =========================
+   费用
+========================= */
+
+.total-card {
+  margin: 12px 0;
+
+  padding: 20px;
+
+  background: linear-gradient(135deg, #fff, #fff1e8);
+
+  border: 1px solid #efdcd2;
+  border-radius: 20px;
+}
+
+.total-label {
+  color: #958580;
+  font-size: 13px;
+}
+
+.total-money {
+  margin-top: 5px;
+
+  font-size: 30px;
+  font-weight: 800;
+}
+
+/* =========================
+   小提示
+========================= */
+
+.note {
+  margin: 13px 2px;
+
+  color: #958681;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* =========================
+   手机
+========================= */
+
+@media (max-width: 600px) {
+
+  .trip-title {
+    font-size: 21px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- =========================
+       Header
+  ========================== -->
+
+  <header class="header">
+
+    <div class="logo">
+      ✈️ 我们的旅行
+    </div>
+
+    <div class="header-subtitle">
+      Lynn · Vincent · Esther · Tong
+    </div>
+
+  </header>
+
+
+  <!-- =========================
+       Trip
+  ========================== -->
+
+  <section class="trip-card">
+
+    <div class="trip-title">
+      🇭🇰 香港 → 广州 → 成都 → 三江
+    </div>
+
+    <div class="trip-date">
+      6 Nov — 15 Nov 2026
+    </div>
+
+    <div class="member-list">
+
+      <span class="member">
+        👩 Lynn
+      </span>
+
+      <span class="member">
+        👨 Vincent
+      </span>
+
+      <span class="member">
+        👩 Esther
+      </span>
+
+      <span class="member">
+        👨 Tong
+      </span>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================
+       Tabs
+  ========================== -->
+
+  <nav class="tabs">
+
+    <button class="tab active" data-page="itinerary">
+      📅 行程
+    </button>
+
+    <button class="tab" data-page="hotel">
+      🏨 酒店
+    </button>
+
+    <button class="tab" data-page="transport">
+      🚄 交通
+    </button>
+
+    <button class="tab" data-page="places">
+      📍 美食景点
+    </button>
+
+    <button class="tab" data-page="expense">
+      💰 费用
+    </button>
+
+  </nav>
+
+
+  <!-- =========================
+       Content
+  ========================== -->
+
+  <main class="content" id="content"></main>
+
+</div>
+
+
+<!-- =========================
+     Modal
+========================== -->
+
+<div class="modal-overlay" id="modalOverlay">
+
+  <div class="modal">
+
+    <h3 class="modal-title" id="modalTitle">
+      添加
+    </h3>
+
+    <div id="formArea"></div>
+
+    <div class="modal-buttons">
+
+      <button
+        class="cancel-button"
+        onclick="closeModal()">
+        取消
+      </button>
+
+      <button
+        class="save-button"
+        id="saveButton">
+        保存
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   基本资料
+========================================================= */
+
+const MEMBERS = [
+  "Lynn",
+  "Vincent",
+  "Esther",
+  "Tong"
+];
+
+
+/* =========================================================
+   初始测试资料
+========================================================= */
+
+const DEFAULT_DATA = {
+
+  itinerary: [
+
+    {
+      id: 1,
+      date: "2026-11-06",
+      time: "10:00",
+      icon: "✈️",
+      name: "新加坡 → 香港",
+      place: "香港机场",
+      member: "Lynn",
+      note: "抵达后前往酒店",
+      link: "",
+      map: ""
+    },
+
+    {
+      id: 2,
+      date: "2026-11-06",
+      time: "16:00",
+      icon: "🏨",
+      name: "酒店 Check-in",
+      place: "九龙",
+      member: "Vincent",
+      note: "",
+      link: "",
+      map: ""
+    },
+
+    {
+      id: 3,
+      date: "2026-11-07",
+      time: "19:00",
+      icon: "🍜",
+      name: "晚餐",
+      place: "尖沙咀",
+      member: "Esther",
+      note: "",
+      link: "",
+      map: ""
+    },
+
+    {
+      id: 4,
+      date: "2026-11-08",
+      time: "12:30",
+      icon: "🚄",
+      name: "香港 → 广州",
+      place: "香港西九龙",
+      member: "Tong",
+      note: "高铁",
+      link: "",
+      map: ""
+    }
+
+  ],
+
+  hotel: [],
+
+  transport: [],
+
+  places: [],
+
+  expense: []
+
+};
+
+
+/* =========================================================
+   从浏览器读取资料
+========================================================= */
+
+let data =
+  JSON.parse(
+    localStorage.getItem("ourTravelApp")
+  ) || DEFAULT_DATA;
+
+
+/* =========================================================
+   当前页面
+========================================================= */
+
+let currentPage = "itinerary";
+
+let editingId = null;
+
+
+/* =========================================================
+   保存
+========================================================= */
+
+function saveData() {
+
+  localStorage.setItem(
+    "ourTravelApp",
+    JSON.stringify(data)
+  );
+
+}
+
+
+/* =========================================================
+   HTML 安全处理
+========================================================= */
+
+function escapeHTML(value) {
+
+  if (!value) {
+    return "";
+  }
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================================
+   日期显示
+========================================================= */
+
+function formatDate(dateString) {
+
+  if (!dateString) {
+    return "";
+  }
+
+  const date =
+    new Date(dateString + "T00:00:00");
+
+  return date.toLocaleDateString(
+    "zh-CN",
+    {
+      month: "long",
+      day: "numeric",
+      weekday: "short"
+    }
+  );
+
+}
+
+
+/* =========================================================
+   页面切换
+========================================================= */
+
+document
+  .querySelectorAll(".tab")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        currentPage =
+          button.dataset.page;
+
+        document
+          .querySelectorAll(".tab")
+          .forEach(item => {
+
+            item.classList.toggle(
+              "active",
+              item === button
+            );
+
+          });
+
+        render();
+
+      }
+    );
+
+  });
+
+
+/* =========================================================
+   Render
+========================================================= */
+
+function render() {
+
+  const content =
+    document.getElementById("content");
+
+
+  if (currentPage === "itinerary") {
+
+    renderItinerary(content);
+
+  }
+
+  else if (currentPage === "expense") {
+
+    renderExpense(content);
+
+  }
+
+  else {
+
+    renderGeneric(
+      content,
+      currentPage
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   行程页面
+========================================================= */
+
+function renderItinerary(content) {
+
+  const items =
+    [...data.itinerary]
+      .sort(
+        (a, b) =>
+          (a.date + a.time)
+          .localeCompare(
+            b.date + b.time
+          )
+      );
+
+
+  let html = `
+
+    <div class="section-header">
+
+      <h2>
+        📅 每日行程
+      </h2>
+
+      <button
+        class="add-button"
+        onclick="openModal('itinerary')">
+
+        ＋ 添加
+
+      </button>
+
+    </div>
+
+  `;
+
+
+  if (!items.length) {
+
+    html += `
+      <div class="empty">
+        还没有行程<br>
+        按「＋ 添加」开始吧 ✨
+      </div>
+    `;
+
+    content.innerHTML = html;
+
+    return;
+
+  }
+
+
+  const groups = {};
+
+
+  items.forEach(item => {
+
+    if (!groups[item.date]) {
+
+      groups[item.date] = [];
+
+    }
+
+    groups[item.date].push(item);
+
+  });
+
+
+  Object.keys(groups)
+    .sort()
+    .forEach(date => {
+
+      html += `
+
+        <div class="day">
+
+          <div class="day-title">
+            ${formatDate(date)}
+          </div>
+
+      `;
+
+
+      groups[date]
+        .forEach(item => {
+
+          html += renderItem(
+            item,
+            "itinerary"
+          );
+
+        });
+
+
+      html += `
+        </div>
+      `;
+
+    });
+
+
+  content.innerHTML = html;
+
+}
+
+
+/* =========================================================
+   酒店 / 交通 / 景点
+========================================================= */
+
+function renderGeneric(
+  content,
+  type
+) {
+
+  const titles = {
+
+    hotel: "🏨 酒店",
+
+    transport: "🚄 交通",
+
+    places: "📍 美食 & 景点"
+
+  };
+
+
+  let html = `
+
+    <div class="section-header">
+
+      <h2>
+        ${titles[type]}
+      </h2>
+
+      <button
+        class="add-button"
+        onclick="openModal('${type}')">
+
+        ＋ 添加
+
+      </button>
+
+    </div>
+
+  `;
+
+
+  if (!data[type].length) {
+
+    html += `
+
+      <div class="empty">
+
+        还没有资料<br>
+        按「＋ 添加」开始吧 ✨
+
+      </div>
+
+    `;
+
+    content.innerHTML = html;
+
+    return;
+
+  }
+
+
+  data[type]
+    .forEach(item => {
+
+      html += renderItem(
+        item,
+        type
+      );
+
+    });
+
+
+  content.innerHTML = html;
+
+}
+
+
+/* =========================================================
+   Item
+========================================================= */
+
+function renderItem(
+  item,
+  type
+) {
+
+  let extra = "";
+
+
+  if (item.amount !== undefined) {
+
+    extra += `
+      💰 S$${Number(item.amount).toFixed(2)}
+    `;
+
+  }
+
+
+  if (item.payer) {
+
+    extra += `
+      · 💳 ${escapeHTML(item.payer)} 付款
+    `;
+
+  }
+
+
+  return `
+
+    <div class="item">
+
+      <div class="item-top">
+
+        <div class="item-name">
+
+          ${escapeHTML(
+            item.icon || getIcon(type)
+          )}
+
+          ${escapeHTML(item.name)}
+
+        </div>
+
+
+        ${
+          item.time
+            ?
+            `<div class="item-time">
+              ${escapeHTML(item.time)}
+            </div>`
+            :
+            ""
+        }
+
+      </div>
+
+
+      <div class="item-info">
+
+        ${
+          item.place
+            ?
+            `📍 ${escapeHTML(item.place)}<br>`
+            :
+            ""
+        }
+
+
+        ${
+          item.member
+            ?
+            `👤 ${escapeHTML(item.member)}<br>`
+            :
+            ""
+        }
+
+
+        ${
+          extra
+        }
+
+
+        ${
+          item.note
+            ?
+            `<br>📝 ${escapeHTML(item.note)}`
+            :
+            ""
+        }
+
+      </div>
+
+
+      <div class="item-actions">
+
+        ${
+          item.link
+            ?
+            `
+              <a
+                class="link-button"
+                href="${escapeHTML(item.link)}"
+                target="_blank"
+                rel="noopener">
+
+                🔗 打开网页
+
+              </a>
+            `
+            :
+            ""
+        }
+
+
+        ${
+          item.map
+            ?
+            `
+              <a
+                class="link-button"
+                href="${escapeHTML(item.map)}"
+                target="_blank"
+                rel="noopener">
+
+                🗺️ 打开地图
+
+              </a>
+            `
+            :
+            ""
+        }
+
+
+        <button
+          class="action-button"
+          onclick="openModal('${type}', ${item.id})">
+
+          ✏️ 编辑
+
+        </button>
+
+
+        <button
+          class="action-button delete-button"
+          onclick="delete
+```
