@@ -368,6 +368,37 @@ button {
 
 
 /* =========================
+   搜索
+========================= */
+
+.search-box {
+  margin: 0 0 14px;
+}
+
+.search-box input {
+  width: 100%;
+
+  padding: 13px 15px;
+
+  border-radius: 14px;
+
+  border: 1px solid #ead9d1;
+
+  background: white;
+
+  font-size: 14px;
+
+  box-shadow:
+    0 5px 16px
+    rgba(120,80,60,.04);
+}
+
+.search-box input::placeholder {
+  color: #aaa09c;
+}
+
+
+/* =========================
    行程
 ========================= */
 
@@ -495,6 +526,114 @@ button {
 
 
 /* =========================
+   文件
+========================= */
+
+.file-upload-button {
+  display: inline-block;
+
+  padding: 8px 11px;
+
+  border-radius: 10px;
+
+  border: 1px solid #e5d6ce;
+
+  background: #faf7f5;
+
+  color: #665957;
+
+  font-size: 13px;
+}
+
+.file-list {
+  margin-top: 11px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.file-card {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 9px 11px;
+
+  border-radius: 12px;
+
+  background: #fff8f4;
+
+  border: 1px solid #f0dfd6;
+}
+
+.file-info {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.file-name {
+  color: #655855;
+
+  font-size: 12px;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  margin-top: 2px;
+
+  color: #a09591;
+
+  font-size: 11px;
+}
+
+.file-actions {
+  display: flex;
+
+  gap: 5px;
+
+  flex-shrink: 0;
+}
+
+.file-open-button,
+.file-delete-button {
+  padding: 6px 8px;
+
+  border-radius: 8px;
+
+  border: 1px solid #eadbd4;
+
+  background: white;
+
+  font-size: 11px;
+}
+
+.file-open-button {
+  color: #c9744f;
+}
+
+.file-delete-button {
+  color: #d76c6c;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+
+/* =========================
    费用
 ========================= */
 
@@ -611,11 +750,21 @@ button {
 }
 
 .total-money {
-  margin-top: 5px;
+  margin-top: 8px;
 
-  font-size: 30px;
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+  font-size: 22px;
 
   font-weight: 800;
+}
+
+.total-currency {
+  line-height: 1.3;
 }
 
 .expense-hint {
@@ -744,6 +893,14 @@ textarea {
   gap: 10px;
 }
 
+.currency-row {
+  display: grid;
+
+  grid-template-columns: 1.5fr 1fr;
+
+  gap: 10px;
+}
+
 .modal-buttons {
   display: flex;
 
@@ -855,6 +1012,10 @@ textarea {
 @media (max-width:600px) {
 
   .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .currency-row {
     grid-template-columns: 1fr;
   }
 
@@ -1173,6 +1334,347 @@ let editingType = null;
 let expenseItineraryId = null;
 
 
+/* =========================================================
+   美食景点搜索
+========================================================= */
+
+let placesSearchKeyword = "";
+
+
+
+/* =========================================================
+   IndexedDB 文件数据库
+========================================================= */
+
+const FILE_DB_NAME =
+  "travelAppFiles";
+
+const FILE_DB_VERSION = 1;
+
+const FILE_STORE =
+  "files";
+
+
+function openFileDB() {
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const request =
+        indexedDB.open(
+          FILE_DB_NAME,
+          FILE_DB_VERSION
+        );
+
+
+      request.onupgradeneeded =
+        function(event) {
+
+          const db =
+            event.target.result;
+
+          if (
+            !db.objectStoreNames.contains(
+              FILE_STORE
+            )
+          ) {
+
+            db.createObjectStore(
+              FILE_STORE,
+              {
+                keyPath: "id"
+              }
+            );
+
+          }
+
+        };
+
+
+      request.onsuccess =
+        function() {
+
+          resolve(
+            request.result
+          );
+
+        };
+
+
+      request.onerror =
+        function() {
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+
+async function saveFileToDB(
+  file,
+  itineraryId
+) {
+
+  const db =
+    await openFileDB();
+
+
+  const id =
+    "file_" +
+    Date.now() +
+    "_" +
+    Math.random()
+      .toString(36)
+      .slice(2);
+
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const transaction =
+        db.transaction(
+          FILE_STORE,
+          "readwrite"
+        );
+
+      const store =
+        transaction.objectStore(
+          FILE_STORE
+        );
+
+
+      const record = {
+
+        id,
+
+        itineraryId,
+
+        name:
+          file.name,
+
+        type:
+          file.type ||
+          "application/octet-stream",
+
+        size:
+          file.size,
+
+        createdAt:
+          new Date().toISOString(),
+
+        blob:
+          file
+
+      };
+
+
+      const request =
+        store.put(record);
+
+
+      request.onsuccess =
+        function() {
+
+          resolve(record);
+
+        };
+
+
+      request.onerror =
+        function() {
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+
+async function getFilesForItinerary(
+  itineraryId
+) {
+
+  const db =
+    await openFileDB();
+
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const transaction =
+        db.transaction(
+          FILE_STORE,
+          "readonly"
+        );
+
+      const store =
+        transaction.objectStore(
+          FILE_STORE
+        );
+
+
+      const request =
+        store.getAll();
+
+
+      request.onsuccess =
+        function() {
+
+          const result =
+            request.result
+            .filter(
+              item =>
+                String(
+                  item.itineraryId
+                ) ===
+                String(
+                  itineraryId
+                )
+            )
+            .sort(
+              (a,b) =>
+                (
+                  a.createdAt || ""
+                )
+                .localeCompare(
+                  b.createdAt || ""
+                )
+            );
+
+
+          resolve(result);
+
+        };
+
+
+      request.onerror =
+        function() {
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+
+async function getFileById(id) {
+
+  const db =
+    await openFileDB();
+
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const transaction =
+        db.transaction(
+          FILE_STORE,
+          "readonly"
+        );
+
+      const store =
+        transaction.objectStore(
+          FILE_STORE
+        );
+
+
+      const request =
+        store.get(id);
+
+
+      request.onsuccess =
+        function() {
+
+          resolve(
+            request.result
+          );
+
+        };
+
+
+      request.onerror =
+        function() {
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+
+async function deleteFileFromDB(id) {
+
+  const db =
+    await openFileDB();
+
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const transaction =
+        db.transaction(
+          FILE_STORE,
+          "readwrite"
+        );
+
+      const store =
+        transaction.objectStore(
+          FILE_STORE
+        );
+
+
+      const request =
+        store.delete(id);
+
+
+      request.onsuccess =
+        function() {
+
+          resolve();
+
+        };
+
+
+      request.onerror =
+        function() {
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
 
 /* =========================================================
    保存
@@ -1257,6 +1759,46 @@ function formatDate(dateString) {
       weekday: "short"
     }
   );
+
+}
+
+
+
+/* =========================================================
+   文件大小
+========================================================= */
+
+function formatFileSize(size) {
+
+  if (!size) return "0 KB";
+
+  if (
+    size < 1024
+  ) {
+
+    return size + " B";
+
+  }
+
+  if (
+    size < 1024 * 1024
+  ) {
+
+    return (
+      (size / 1024)
+      .toFixed(1)
+    ) +
+    " KB";
+
+  }
+
+  return (
+    (size /
+      1024 /
+      1024)
+      .toFixed(1)
+  ) +
+  " MB";
 
 }
 
@@ -1426,6 +1968,8 @@ function openTrip(id) {
 
   currentPage =
     "itinerary";
+
+  placesSearchKeyword = "";
 
   renderTrip();
 
@@ -1635,6 +2179,14 @@ function switchPage(page) {
 
   currentPage = page;
 
+  if (
+    page !== "places"
+  ) {
+
+    placesSearchKeyword = "";
+
+  }
+
   renderTrip();
 
 }
@@ -1663,6 +2215,34 @@ function renderPage() {
   if (!trip.expense) {
 
     trip.expense = [];
+
+  }
+
+
+  if (!trip.itinerary) {
+
+    trip.itinerary = [];
+
+  }
+
+
+  if (!trip.hotel) {
+
+    trip.hotel = [];
+
+  }
+
+
+  if (!trip.transport) {
+
+    trip.transport = [];
+
+  }
+
+
+  if (!trip.places) {
+
+    trip.places = [];
 
   }
 
@@ -1827,6 +2407,11 @@ function renderItinerary(
 
   content.innerHTML = html;
 
+
+  loadAllItineraryFiles(
+    trip
+  );
+
 }
 
 
@@ -1879,18 +2464,111 @@ function renderGeneric(
   `;
 
 
-  if (!trip[type].length) {
+  /* =========================
+     只有美食景点搜索
+  ========================= */
+
+  if (
+    type === "places"
+  ) {
+
+    html += `
+
+      <div class="search-box">
+
+        <input
+          id="placesSearch"
+          type="search"
+          placeholder="🔍 搜索美食、景点、地点或备注"
+          value="${escapeHTML(
+            placesSearchKeyword
+          )}"
+          oninput="
+            placesSearchKeyword = this.value;
+            renderPlacesResults();
+          ">
+
+      </div>
+
+    `;
+
+  }
+
+
+  let items =
+    [...(trip[type] || [])];
+
+
+  if (
+    type === "places" &&
+    placesSearchKeyword.trim()
+  ) {
+
+    const keyword =
+      placesSearchKeyword
+        .trim()
+        .toLowerCase();
+
+
+    items =
+      items.filter(item => {
+
+        const text = [
+
+          item.name || "",
+
+          item.place || "",
+
+          item.note || "",
+
+          item.member || "",
+
+          item.date || ""
+
+        ]
+        .join(" ")
+        .toLowerCase();
+
+
+        return text.includes(
+          keyword
+        );
+
+      });
+
+  }
+
+
+  if (!items.length) {
 
     html += `
 
       <div class="empty">
 
-        还没有资料
+        ${
+          type === "places" &&
+          placesSearchKeyword.trim()
+          ?
+          "找不到符合的资料"
+          :
+          "还没有资料"
+        }
 
-        <br><br>
+        ${
+          !(
+            type === "places" &&
+            placesSearchKeyword.trim()
+          )
+          ?
+          `
+            <br><br>
 
-        按「＋ 添加」
-        开始吧 ✨
+            按「＋ 添加」
+            开始吧 ✨
+          `
+          :
+          ""
+        }
 
       </div>
 
@@ -1903,7 +2581,7 @@ function renderGeneric(
   }
 
 
-  trip[type].forEach(item => {
+  items.forEach(item => {
 
     html += renderItem(
       item,
@@ -1914,6 +2592,58 @@ function renderGeneric(
 
 
   content.innerHTML = html;
+
+}
+
+
+
+/* =========================================================
+   美食景点即时搜索
+========================================================= */
+
+function renderPlacesResults() {
+
+  const trip =
+    getCurrentTrip();
+
+
+  if (!trip) return;
+
+
+  const content =
+    document.getElementById(
+      "tripContent"
+    );
+
+
+  renderGeneric(
+    content,
+    trip,
+    "places"
+  );
+
+
+  const input =
+    document.getElementById(
+      "placesSearch"
+    );
+
+
+  if (input) {
+
+    input.focus();
+
+    try {
+
+      input.setSelectionRange(
+        input.value.length,
+        input.value.length
+      );
+
+    }
+    catch(error) {}
+
+  }
 
 }
 
@@ -1935,15 +2665,39 @@ function renderExpense(
   }
 
 
-  const total =
-    trip.expense.reduce(
-      (sum,item) =>
-        sum +
+  /* =========================
+     按 Currency 分组
+  ========================= */
+
+  const totals = {};
+
+
+  trip.expense.forEach(
+    item => {
+
+      const currency =
+        (
+          item.currency ||
+          "SGD"
+        )
+        .trim()
+        .toUpperCase();
+
+
+      if (!totals[currency]) {
+
+        totals[currency] = 0;
+
+      }
+
+
+      totals[currency] +=
         Number(
           item.amount || 0
-        ),
-      0
-    );
+        );
+
+    }
+  );
 
 
   let html = `
@@ -1976,7 +2730,27 @@ function renderExpense(
 
       <div class="total-money">
 
-        S$${total.toFixed(2)}
+        ${
+          Object.keys(totals).length
+          ?
+          Object.keys(totals)
+            .sort()
+            .map(currency => `
+
+              <div class="total-currency">
+
+                ${formatMoney(
+                  totals[currency],
+                  currency
+                )}
+
+              </div>
+
+            `)
+            .join("")
+          :
+          `<div>—</div>`
+        }
 
       </div>
 
@@ -2037,6 +2811,111 @@ function renderExpense(
 
 
 /* =========================================================
+   Currency
+========================================================= */
+
+function formatMoney(
+  amount,
+  currency
+) {
+
+  const code =
+    (
+      currency ||
+      "SGD"
+    )
+    .trim()
+    .toUpperCase();
+
+
+  const number =
+    Number(amount || 0);
+
+
+  const fixed =
+    (
+      code === "JPY" ||
+      code === "KRW"
+    )
+    ?
+    number.toFixed(0)
+    :
+    number.toFixed(2);
+
+
+  const symbols = {
+
+    SGD:
+      "S$",
+
+    HKD:
+      "HK$",
+
+    CNY:
+      "¥",
+
+    RMB:
+      "¥",
+
+    MYR:
+      "RM",
+
+    JPY:
+      "¥",
+
+    USD:
+      "US$",
+
+    EUR:
+      "€",
+
+    GBP:
+      "£",
+
+    KRW:
+      "₩",
+
+    TWD:
+      "NT$",
+
+    THB:
+      "฿",
+
+    AUD:
+      "A$",
+
+    CAD:
+      "C$",
+
+    NZD:
+      "NZ$"
+
+  };
+
+
+  if (
+    symbols[code]
+  ) {
+
+    return (
+      symbols[code] +
+      fixed
+    );
+
+  }
+
+
+  return (
+    escapeHTML(code) +
+    " " +
+    fixed
+  );
+
+}
+
+
+
+/* =========================================================
    Expense Card
 ========================================================= */
 
@@ -2062,6 +2941,15 @@ function renderExpenseCard(
     Number(
       item.amount || 0
     );
+
+
+  const currency =
+    (
+      item.currency ||
+      "SGD"
+    )
+    .trim()
+    .toUpperCase();
 
 
   const each =
@@ -2092,7 +2980,10 @@ function renderExpenseCard(
 
         <div class="expense-amount">
 
-          S$${amount.toFixed(2)}
+          ${formatMoney(
+            amount,
+            currency
+          )}
 
         </div>
 
@@ -2176,8 +3067,14 @@ function renderExpenseCard(
             <br>
 
             💵 每人约
+
             <strong>
-              S$${each.toFixed(2)}
+
+              ${formatMoney(
+                each,
+                currency
+              )}
+
             </strong>
 
           </div>
@@ -2266,10 +3163,11 @@ function renderItem(
 
     extra += `
 
-      💰 S$
-      ${Number(
-        item.amount
-      ).toFixed(2)}
+      💰
+      ${formatMoney(
+        Number(item.amount),
+        item.currency || "SGD"
+      )}
 
     `;
 
@@ -2285,6 +3183,36 @@ function renderItem(
         item.payer
       )}
       付款
+
+    `;
+
+  }
+
+
+  let fileArea = "";
+
+
+  if (
+    type === "itinerary"
+  ) {
+
+    fileArea = `
+
+      <div
+        class="file-list"
+        id="files-${item.id}">
+
+        <div
+          style="
+            color:#a09591;
+            font-size:11px;
+          ">
+
+          正在读取文件…
+
+        </div>
+
+      </div>
 
     `;
 
@@ -2395,6 +3323,9 @@ function renderItem(
       </div>
 
 
+      ${fileArea}
+
+
       <div class="item-actions">
 
 
@@ -2449,6 +3380,25 @@ function renderItem(
           ?
           `
 
+            <label
+              class="file-upload-button">
+
+              📎 上传文件
+
+              <input
+                class="file-input-hidden"
+                type="file"
+                multiple
+                onchange="
+                  uploadItineraryFiles(
+                    ${item.id},
+                    this.files
+                  )
+                ">
+
+            </label>
+
+
             <button
               class="expense-add-button"
               onclick="
@@ -2499,6 +3449,321 @@ function renderItem(
     </div>
 
   `;
+
+}
+
+
+
+/* =========================================================
+   加载行程文件
+========================================================= */
+
+async function loadAllItineraryFiles(
+  trip
+) {
+
+  for (
+    const item of
+    trip.itinerary || []
+  ) {
+
+    try {
+
+      const files =
+        await getFilesForItinerary(
+          item.id
+        );
+
+
+      renderItineraryFiles(
+        item.id,
+        files
+      );
+
+    }
+    catch(error) {
+
+      console.error(
+        "读取文件失败",
+        error
+      );
+
+    }
+
+  }
+
+}
+
+
+
+function renderItineraryFiles(
+  itineraryId,
+  files
+) {
+
+  const container =
+    document.getElementById(
+      `files-${itineraryId}`
+    );
+
+
+  if (!container) return;
+
+
+  if (!files.length) {
+
+    container.innerHTML = "";
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    files.map(file => `
+
+      <div class="file-card">
+
+        <div class="file-info">
+
+          <div class="file-name">
+
+            📎
+            ${escapeHTML(
+              file.name
+            )}
+
+          </div>
+
+          <div class="file-size">
+
+            ${formatFileSize(
+              file.size
+            )}
+
+          </div>
+
+        </div>
+
+
+        <div class="file-actions">
+
+          <button
+            class="file-open-button"
+            onclick="
+              openStoredFile(
+                '${escapeHTML(file.id)}'
+              )
+            ">
+
+            查看
+
+          </button>
+
+
+          <button
+            class="file-delete-button"
+            onclick="
+              deleteStoredFile(
+                '${escapeHTML(file.id)}',
+                ${itineraryId}
+              )
+            ">
+
+            删除
+
+          </button>
+
+        </div>
+
+      </div>
+
+    `)
+    .join("");
+
+}
+
+
+
+/* =========================================================
+   上传行程文件
+========================================================= */
+
+async function uploadItineraryFiles(
+  itineraryId,
+  fileList
+) {
+
+  if (!fileList || !fileList.length) {
+    return;
+  }
+
+
+  try {
+
+    for (
+      const file of
+      Array.from(fileList)
+    ) {
+
+      await saveFileToDB(
+        file,
+        itineraryId
+      );
+
+    }
+
+
+    const files =
+      await getFilesForItinerary(
+        itineraryId
+      );
+
+
+    renderItineraryFiles(
+      itineraryId,
+      files
+    );
+
+
+    alert(
+      "文件上传成功 📎"
+    );
+
+  }
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+    alert(
+      "文件上传失败，请再试一次"
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   打开文件
+========================================================= */
+
+async function openStoredFile(
+  fileId
+) {
+
+  try {
+
+    const file =
+      await getFileById(
+        fileId
+      );
+
+
+    if (!file) {
+
+      alert(
+        "找不到这个文件"
+      );
+
+      return;
+
+    }
+
+
+    const url =
+      URL.createObjectURL(
+        file.blob
+      );
+
+
+    window.open(
+      url,
+      "_blank"
+    );
+
+
+    setTimeout(
+      () => {
+
+        URL.revokeObjectURL(
+          url
+        );
+
+      },
+      60000
+    );
+
+  }
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+    alert(
+      "无法打开文件"
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   删除文件
+========================================================= */
+
+async function deleteStoredFile(
+  fileId,
+  itineraryId
+) {
+
+  if (
+    !confirm(
+      "确定要删除这个文件吗？"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    await deleteFileFromDB(
+      fileId
+    );
+
+
+    const files =
+      await getFilesForItinerary(
+        itineraryId
+      );
+
+
+    renderItineraryFiles(
+      itineraryId,
+      files
+    );
+
+  }
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+    alert(
+      "删除文件失败"
+    );
+
+  }
 
 }
 
@@ -3181,6 +4446,27 @@ function buildForm(
           item?.map || ""
         )}">
 
+
+      <div
+        style="
+          margin-top:15px;
+          padding:12px;
+          background:#fff7f2;
+          border-radius:13px;
+          color:#8d7e79;
+          font-size:12px;
+          line-height:1.6;
+        ">
+
+        📎 文件可以直接在行程卡片的
+        「📎 上传文件」添加。
+
+        <br>
+
+        例如：机票、火车票、预约确认单、PDF 等。
+
+      </div>
+
     `;
 
   }
@@ -3375,20 +4661,67 @@ function buildExpenseForm(
 
 
     <label>
-      金额（SGD）
+      金额
     </label>
 
 
-    <input
-      type="number"
-      step="0.01"
-      min="0"
-      id="fAmount"
-      placeholder="0.00"
-      value="${
-        item?.amount ??
-        ""
-      }">
+    <div class="currency-row">
+
+      <input
+        type="number"
+        step="0.01"
+        min="0"
+        id="fAmount"
+        placeholder="0.00"
+        value="${
+          item?.amount ??
+          ""
+        }">
+
+
+      <input
+        id="fCurrency"
+        list="currencyList"
+        placeholder="SGD / HKD / CNY"
+        value="${escapeHTML(
+          item?.currency ||
+          "SGD"
+        )}">
+
+    </div>
+
+
+    <datalist id="currencyList">
+
+      <option value="SGD">
+      <option value="HKD">
+      <option value="CNY">
+      <option value="MYR">
+      <option value="JPY">
+      <option value="USD">
+      <option value="EUR">
+      <option value="GBP">
+      <option value="KRW">
+      <option value="TWD">
+      <option value="THB">
+      <option value="AUD">
+      <option value="CAD">
+      <option value="NZD">
+
+    </datalist>
+
+
+    <div
+      style="
+        margin-top:6px;
+        color:#a09591;
+        font-size:11px;
+      ">
+
+      💡 Currency 可以自己写，例如：
+      SGD、HKD、CNY、MYR、THB
+
+    </div>
 
 
     <label>
@@ -3560,6 +4893,18 @@ function saveItem() {
     type === "itinerary"
   ) {
 
+    const oldItem =
+      editingId
+      ?
+      trip.itinerary.find(
+        x =>
+          x.id ===
+          editingId
+      )
+      :
+      null;
+
+
     item = {
 
       id:
@@ -3698,6 +5043,28 @@ function saveItem() {
       );
 
 
+    const oldExpense =
+      editingId
+      ?
+      trip.expense.find(
+        x =>
+          x.id ===
+          editingId
+      )
+      :
+      null;
+
+
+    const currency =
+      (
+        document.getElementById(
+          "fCurrency"
+        ).value.trim() ||
+        "SGD"
+      )
+      .toUpperCase();
+
+
     item = {
 
       id:
@@ -3708,11 +5075,7 @@ function saveItem() {
         editingId
         ?
         (
-          trip.expense.find(
-            x =>
-              x.id ===
-              editingId
-          )?.itineraryId ||
+          oldExpense?.itineraryId ||
           null
         )
         :
@@ -3729,6 +5092,8 @@ function saveItem() {
             "fAmount"
           ).value
         ) || 0,
+
+      currency,
 
       payer:
         document.getElementById(
@@ -3770,6 +5135,20 @@ function saveItem() {
 
     alert(
       "请输入费用金额"
+    );
+
+    return;
+
+  }
+
+
+  if (
+    type === "expense" &&
+    !item.currency
+  ) {
+
+    alert(
+      "请输入 Currency"
     );
 
     return;
@@ -3916,6 +5295,8 @@ function closeModal() {
 function backHome() {
 
   currentTripId = null;
+
+  placesSearchKeyword = "";
 
   renderHome();
 
