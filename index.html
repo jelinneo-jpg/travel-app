@@ -5,9 +5,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#f3a77f">
+
 <title>我们的旅行 ✈️</title>
 
 <style>
+
 * {
   box-sizing: border-box;
 }
@@ -43,11 +45,11 @@ button {
 }
 
 /* =========================
-   顶部
+   Header
 ========================= */
 
 .header {
-  padding: 28px 18px 16px;
+  padding: 28px 18px 18px;
 }
 
 .logo {
@@ -62,42 +64,163 @@ button {
 }
 
 /* =========================
-   旅行卡片
+   首页
 ========================= */
 
-.trip-card {
-  margin: 0 16px 16px;
-  padding: 23px;
-  border-radius: 25px;
-  background: linear-gradient(135deg, #fff, #fff0e7);
-  border: 1px solid #f2ddd2;
-  box-shadow: 0 10px 30px rgba(120, 80, 60, 0.08);
+.home-content {
+  padding: 0 16px;
 }
 
-.trip-title {
-  font-size: 24px;
+.home-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 5px 2px 15px;
+}
+
+.home-title {
+  font-size: 21px;
   font-weight: 800;
 }
 
-.trip-date {
+.add-trip-button {
+  border: 0;
+  background: #efa37c;
+  color: white;
+  padding: 10px 13px;
+  border-radius: 13px;
+  font-weight: 700;
+}
+
+/* =========================
+   Trip Card
+========================= */
+
+.trip-list-card {
+  position: relative;
+
+  margin-bottom: 15px;
+  padding: 22px;
+
+  background: linear-gradient(135deg, #fff, #fff0e7);
+
+  border: 1px solid #f2ddd2;
+  border-radius: 24px;
+
+  box-shadow:
+    0 10px 30px rgba(120, 80, 60, 0.08);
+
+  transition: transform .15s;
+}
+
+.trip-list-card:active {
+  transform: scale(.98);
+}
+
+.trip-card-click {
+  cursor: pointer;
+}
+
+.trip-card-title {
+  font-size: 22px;
+  font-weight: 800;
+  padding-right: 35px;
+}
+
+.trip-card-date {
   margin-top: 7px;
   color: #968783;
   font-size: 14px;
 }
 
-.member-list {
+.trip-card-members {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 17px;
+  gap: 6px;
+  margin-top: 15px;
 }
 
 .member {
-  padding: 7px 11px;
+  padding: 6px 10px;
   border-radius: 999px;
   background: white;
   border: 1px solid #efd9ce;
-  font-size: 13px;
+  font-size: 12px;
+}
+
+.trip-arrow {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  font-size: 25px;
+  color: #d99270;
+}
+
+.trip-card-actions {
+  display: flex;
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.small-action {
+  padding: 8px 11px;
+  border-radius: 10px;
+
+  border: 1px solid #efddd3;
+  background: white;
+
+  color: #665957;
+  font-size: 12px;
+}
+
+.small-delete {
+  color: #d76c6c;
+}
+
+/* =========================
+   Trip Header
+========================= */
+
+.trip-header-card {
+  margin: 0 16px 12px;
+  padding: 20px;
+
+  background: linear-gradient(135deg, #fff, #fff0e7);
+
+  border: 1px solid #f2ddd2;
+  border-radius: 24px;
+
+  box-shadow: 0 10px 30px rgba(120, 80, 60, 0.07);
+}
+
+.back-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #c9744f;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.trip-header-title {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.trip-header-date {
+  margin-top: 6px;
+  color: #968783;
+  font-size: 14px;
+}
+
+.trip-header-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 13px;
 }
 
 /* =========================
@@ -116,7 +239,8 @@ button {
 
   overflow-x: auto;
 
-  background: rgba(255, 249, 245, 0.96);
+  background: rgba(255, 249, 245, .96);
+
   backdrop-filter: blur(10px);
 }
 
@@ -190,10 +314,11 @@ button {
   padding: 15px;
 
   background: white;
+
   border: 1px solid #f0ded5;
   border-radius: 18px;
 
-  box-shadow: 0 7px 22px rgba(120, 80, 60, 0.06);
+  box-shadow: 0 7px 22px rgba(120,80,60,.06);
 }
 
 .item-top {
@@ -225,7 +350,6 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-
   margin-top: 12px;
 }
 
@@ -256,41 +380,7 @@ button {
 }
 
 /* =========================
-   卡片
-========================= */
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.info-card {
-  padding: 16px;
-
-  background: white;
-  border: 1px solid #efddd4;
-  border-radius: 18px;
-}
-
-.info-icon {
-  font-size: 25px;
-}
-
-.info-card-title {
-  margin-top: 7px;
-  font-weight: 800;
-}
-
-.info-card-text {
-  margin-top: 5px;
-
-  color: #91837f;
-  font-size: 13px;
-}
-
-/* =========================
-   空白
+   Empty
 ========================= */
 
 .empty {
@@ -301,8 +391,36 @@ button {
   color: #978984;
 
   background: white;
+
   border: 1px dashed #ead7ce;
   border-radius: 18px;
+}
+
+/* =========================
+   Total
+========================= */
+
+.total-card {
+  margin: 12px 0;
+
+  padding: 20px;
+
+  background: linear-gradient(135deg, #fff, #fff1e8);
+
+  border: 1px solid #efdcd2;
+  border-radius: 20px;
+}
+
+.total-label {
+  color: #958580;
+  font-size: 13px;
+}
+
+.total-money {
+  margin-top: 5px;
+
+  font-size: 30px;
+  font-weight: 800;
 }
 
 /* =========================
@@ -322,7 +440,7 @@ button {
   align-items: flex-end;
   justify-content: center;
 
-  background: rgba(50, 35, 30, 0.38);
+  background: rgba(50,35,30,.38);
 }
 
 .modal-overlay.show {
@@ -330,7 +448,7 @@ button {
 }
 
 .modal {
-  width: min(650px, 100%);
+  width: min(650px,100%);
   max-height: 92vh;
 
   overflow-y: auto;
@@ -366,6 +484,7 @@ select {
   padding: 12px;
 
   border: 1px solid #ead9d1;
+
   border-radius: 12px;
 
   background: #fffaf7;
@@ -418,72 +537,58 @@ textarea {
 }
 
 /* =========================
-   费用
+   Members
 ========================= */
 
-.total-card {
-  margin: 12px 0;
-
-  padding: 20px;
-
-  background: linear-gradient(135deg, #fff, #fff1e8);
-
-  border: 1px solid #efdcd2;
-  border-radius: 20px;
+.member-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.total-label {
-  color: #958580;
+.member-check {
+  display: inline-flex;
+
+  align-items: center;
+  gap: 5px;
+
+  padding: 8px 11px;
+
+  border: 1px solid #ead9d1;
+  border-radius: 999px;
+
+  background: #fffaf7;
+
   font-size: 13px;
 }
 
-.total-money {
-  margin-top: 5px;
-
-  font-size: 30px;
-  font-weight: 800;
-}
-
-/* =========================
-   小提示
-========================= */
-
-.note {
-  margin: 13px 2px;
-
-  color: #958681;
-  font-size: 12px;
-  line-height: 1.6;
+.member-check input {
+  width: auto;
 }
 
 /* =========================
    手机
 ========================= */
 
-@media (max-width: 600px) {
-
-  .trip-title {
-    font-size: 21px;
-  }
+@media (max-width:600px) {
 
   .form-row {
     grid-template-columns: 1fr;
   }
 
-  .info-grid {
-    grid-template-columns: 1fr;
+  .trip-card-title {
+    font-size: 20px;
   }
+
 }
+
 </style>
 </head>
+
 
 <body>
 
 <div class="app">
-
-  <!-- =========================
-       Header
-  ========================== -->
 
   <header class="header">
 
@@ -497,91 +602,24 @@ textarea {
 
   </header>
 
-
-  <!-- =========================
-       Trip
-  ========================== -->
-
-  <section class="trip-card">
-
-    <div class="trip-title">
-      🇭🇰 香港 → 广州 → 成都 → 三江
-    </div>
-
-    <div class="trip-date">
-      6 Nov — 15 Nov 2026
-    </div>
-
-    <div class="member-list">
-
-      <span class="member">
-        👩 Lynn
-      </span>
-
-      <span class="member">
-        👨 Vincent
-      </span>
-
-      <span class="member">
-        👩 Esther
-      </span>
-
-      <span class="member">
-        👨 Tong
-      </span>
-
-    </div>
-
-  </section>
-
-
-  <!-- =========================
-       Tabs
-  ========================== -->
-
-  <nav class="tabs">
-
-    <button class="tab active" data-page="itinerary">
-      📅 行程
-    </button>
-
-    <button class="tab" data-page="hotel">
-      🏨 酒店
-    </button>
-
-    <button class="tab" data-page="transport">
-      🚄 交通
-    </button>
-
-    <button class="tab" data-page="places">
-      📍 美食景点
-    </button>
-
-    <button class="tab" data-page="expense">
-      💰 费用
-    </button>
-
-  </nav>
-
-
-  <!-- =========================
-       Content
-  ========================== -->
-
-  <main class="content" id="content"></main>
+  <div id="appContent"></div>
 
 </div>
 
 
 <!-- =========================
      Modal
-========================== -->
+========================= -->
 
-<div class="modal-overlay" id="modalOverlay">
+<div
+  class="modal-overlay"
+  id="modalOverlay">
 
   <div class="modal">
 
-    <h3 class="modal-title" id="modalTitle">
+    <h3
+      class="modal-title"
+      id="modalTitle">
       添加
     </h3>
 
@@ -592,13 +630,17 @@ textarea {
       <button
         class="cancel-button"
         onclick="closeModal()">
+
         取消
+
       </button>
 
       <button
         class="save-button"
         id="saveButton">
+
         保存
+
       </button>
 
     </div>
@@ -611,7 +653,7 @@ textarea {
 <script>
 
 /* =========================================================
-   基本资料
+   成员
 ========================================================= */
 
 const MEMBERS = [
@@ -623,140 +665,158 @@ const MEMBERS = [
 
 
 /* =========================================================
-   初始测试资料
+   默认 Trip
 ========================================================= */
 
-const DEFAULT_DATA = {
+const DEFAULT_TRIPS = [
 
-  itinerary: [
+  {
+    id: 1,
 
-    {
-      id: 1,
-      date: "2026-11-06",
-      time: "10:00",
-      icon: "✈️",
-      name: "新加坡 → 香港",
-      place: "香港机场",
-      member: "Lynn",
-      note: "抵达后前往酒店",
-      link: "",
-      map: ""
-    },
+    name: "🇭🇰 香港 → 广州 → 成都 → 三江",
 
-    {
-      id: 2,
-      date: "2026-11-06",
-      time: "16:00",
-      icon: "🏨",
-      name: "酒店 Check-in",
-      place: "九龙",
-      member: "Vincent",
-      note: "",
-      link: "",
-      map: ""
-    },
+    startDate: "2026-11-06",
 
-    {
-      id: 3,
-      date: "2026-11-07",
-      time: "19:00",
-      icon: "🍜",
-      name: "晚餐",
-      place: "尖沙咀",
-      member: "Esther",
-      note: "",
-      link: "",
-      map: ""
-    },
+    endDate: "2026-11-15",
 
-    {
-      id: 4,
-      date: "2026-11-08",
-      time: "12:30",
-      icon: "🚄",
-      name: "香港 → 广州",
-      place: "香港西九龙",
-      member: "Tong",
-      note: "高铁",
-      link: "",
-      map: ""
-    }
+    members: [
+      "Lynn",
+      "Vincent",
+      "Esther",
+      "Tong"
+    ],
 
-  ],
+    itinerary: [
 
-  hotel: [],
+      {
+        id: 101,
+        date: "2026-11-06",
+        time: "10:00",
+        icon: "✈️",
+        name: "新加坡 → 香港",
+        place: "香港机场",
+        member: "Lynn",
+        note: "抵达后前往酒店",
+        link: "",
+        map: ""
+      },
 
-  transport: [],
+      {
+        id: 102,
+        date: "2026-11-06",
+        time: "16:00",
+        icon: "🏨",
+        name: "酒店 Check-in",
+        place: "九龙",
+        member: "Vincent",
+        note: "",
+        link: "",
+        map: ""
+      },
 
-  places: [],
+      {
+        id: 103,
+        date: "2026-11-07",
+        time: "19:00",
+        icon: "🍜",
+        name: "晚餐",
+        place: "尖沙咀",
+        member: "Esther",
+        note: "",
+        link: "",
+        map: ""
+      },
 
-  expense: []
+      {
+        id: 104,
+        date: "2026-11-08",
+        time: "12:30",
+        icon: "🚄",
+        name: "香港 → 广州",
+        place: "香港西九龙",
+        member: "Tong",
+        note: "高铁",
+        link: "",
+        map: ""
+      }
 
-};
+    ],
+
+    hotel: [],
+
+    transport: [],
+
+    places: [],
+
+    expense: []
+
+  }
+
+];
 
 
 /* =========================================================
-   从浏览器读取资料
+   读取 Trips
 ========================================================= */
 
-let data =
+let trips =
   JSON.parse(
-    localStorage.getItem("ourTravelApp")
-  ) || DEFAULT_DATA;
+    localStorage.getItem("travelTrips")
+  ) || DEFAULT_TRIPS;
 
 
 /* =========================================================
-   当前页面
+   当前 Trip
 ========================================================= */
+
+let currentTripId = null;
 
 let currentPage = "itinerary";
 
 let editingId = null;
+
+let editingType = null;
 
 
 /* =========================================================
    保存
 ========================================================= */
 
-function saveData() {
+function saveTrips() {
 
   localStorage.setItem(
-    "ourTravelApp",
-    JSON.stringify(data)
+    "travelTrips",
+    JSON.stringify(trips)
   );
 
 }
 
 
 /* =========================================================
-   HTML 安全处理
+   Escape HTML
 ========================================================= */
 
 function escapeHTML(value) {
 
-  if (!value) {
-    return "";
-  }
+  if (!value) return "";
 
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 
 }
 
 
 /* =========================================================
-   日期显示
+   日期
 ========================================================= */
 
 function formatDate(dateString) {
 
-  if (!dateString) {
-    return "";
-  }
+  if (!dateString) return "";
 
   const date =
     new Date(dateString + "T00:00:00");
@@ -764,11 +824,285 @@ function formatDate(dateString) {
   return date.toLocaleDateString(
     "zh-CN",
     {
-      month: "long",
-      day: "numeric",
-      weekday: "short"
+      month:"long",
+      day:"numeric",
+      weekday:"short"
     }
   );
+
+}
+
+
+/* =========================================================
+   首页
+========================================================= */
+
+function renderHome() {
+
+  const app =
+    document.getElementById("appContent");
+
+  let html = `
+
+    <main class="home-content">
+
+      <div class="home-title-row">
+
+        <div class="home-title">
+          🧳 我的 Trips
+        </div>
+
+        <button
+          class="add-trip-button"
+          onclick="openTripModal()">
+
+          ＋ 新增 Trip
+
+        </button>
+
+      </div>
+
+  `;
+
+
+  if (!trips.length) {
+
+    html += `
+
+      <div class="empty">
+
+        还没有 Trip<br><br>
+
+        按「＋ 新增 Trip」开始吧 ✨
+
+      </div>
+
+    `;
+
+  }
+
+
+  trips.forEach(trip => {
+
+    html += `
+
+      <div class="trip-list-card">
+
+        <div
+          class="trip-card-click"
+          onclick="openTrip(${trip.id})">
+
+          <div class="trip-card-title">
+
+            ${escapeHTML(trip.name)}
+
+          </div>
+
+          <div class="trip-card-date">
+
+            ${escapeHTML(trip.startDate)}
+            — 
+            ${escapeHTML(trip.endDate)}
+
+          </div>
+
+          <div class="trip-card-members">
+
+            ${
+              trip.members.map(member => `
+                <span class="member">
+                  ${escapeHTML(member)}
+                </span>
+              `).join("")
+            }
+
+          </div>
+
+          <div class="trip-arrow">
+            ›
+          </div>
+
+        </div>
+
+
+        <div class="trip-card-actions">
+
+          <button
+            class="small-action"
+            onclick="openTripModal(${trip.id}); event.stopPropagation();">
+
+            ✏️ 编辑 Trip
+
+          </button>
+
+          <button
+            class="small-action small-delete"
+            onclick="deleteTrip(${trip.id}); event.stopPropagation();">
+
+            🗑️ 删除
+
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+
+  html += `</main>`;
+
+  app.innerHTML = html;
+
+}
+
+
+/* =========================================================
+   打开 Trip
+========================================================= */
+
+function openTrip(id) {
+
+  currentTripId = id;
+
+  currentPage = "itinerary";
+
+  renderTrip();
+
+}
+
+
+/* =========================================================
+   当前 Trip
+========================================================= */
+
+function getCurrentTrip() {
+
+  return trips.find(
+    trip => trip.id === currentTripId
+  );
+
+}
+
+
+/* =========================================================
+   Trip 页面
+========================================================= */
+
+function renderTrip() {
+
+  const trip =
+    getCurrentTrip();
+
+  if (!trip) {
+
+    currentTripId = null;
+
+    renderHome();
+
+    return;
+
+  }
+
+
+  const app =
+    document.getElementById("appContent");
+
+
+  app.innerHTML = `
+
+    <section class="trip-header-card">
+
+      <button
+        class="back-button"
+        onclick="backHome()">
+
+        ← 所有 Trips
+
+      </button>
+
+      <div class="trip-header-title">
+
+        ${escapeHTML(trip.name)}
+
+      </div>
+
+      <div class="trip-header-date">
+
+        ${escapeHTML(trip.startDate)}
+        —
+        ${escapeHTML(trip.endDate)}
+
+      </div>
+
+      <div class="trip-header-members">
+
+        ${
+          trip.members.map(member => `
+            <span class="member">
+              ${escapeHTML(member)}
+            </span>
+          `).join("")
+        }
+
+      </div>
+
+    </section>
+
+
+    <nav class="tabs">
+
+      <button
+        class="tab ${currentPage === "itinerary" ? "active" : ""}"
+        onclick="switchPage('itinerary')">
+
+        📅 行程
+
+      </button>
+
+      <button
+        class="tab ${currentPage === "hotel" ? "active" : ""}"
+        onclick="switchPage('hotel')">
+
+        🏨 酒店
+
+      </button>
+
+      <button
+        class="tab ${currentPage === "transport" ? "active" : ""}"
+        onclick="switchPage('transport')">
+
+        🚄 交通
+
+      </button>
+
+      <button
+        class="tab ${currentPage === "places" ? "active" : ""}"
+        onclick="switchPage('places')">
+
+        📍 美食景点
+
+      </button>
+
+      <button
+        class="tab ${currentPage === "expense" ? "active" : ""}"
+        onclick="switchPage('expense')">
+
+        💰 费用
+
+      </button>
+
+    </nav>
+
+
+    <main class="content" id="tripContent"></main>
+
+  `;
+
+
+  renderPage();
 
 }
 
@@ -777,55 +1111,46 @@ function formatDate(dateString) {
    页面切换
 ========================================================= */
 
-document
-  .querySelectorAll(".tab")
-  .forEach(button => {
+function switchPage(page) {
 
-    button.addEventListener(
-      "click",
-      () => {
+  currentPage = page;
 
-        currentPage =
-          button.dataset.page;
+  renderTrip();
 
-        document
-          .querySelectorAll(".tab")
-          .forEach(item => {
-
-            item.classList.toggle(
-              "active",
-              item === button
-            );
-
-          });
-
-        render();
-
-      }
-    );
-
-  });
+}
 
 
 /* =========================================================
-   Render
+   Render Page
 ========================================================= */
 
-function render() {
+function renderPage() {
+
+  const trip =
+    getCurrentTrip();
 
   const content =
-    document.getElementById("content");
+    document.getElementById("tripContent");
+
+
+  if (!trip) return;
 
 
   if (currentPage === "itinerary") {
 
-    renderItinerary(content);
+    renderItinerary(
+      content,
+      trip
+    );
 
   }
 
   else if (currentPage === "expense") {
 
-    renderExpense(content);
+    renderExpense(
+      content,
+      trip
+    );
 
   }
 
@@ -833,6 +1158,7 @@ function render() {
 
     renderGeneric(
       content,
+      trip,
       currentPage
     );
 
@@ -842,15 +1168,18 @@ function render() {
 
 
 /* =========================================================
-   行程页面
+   行程
 ========================================================= */
 
-function renderItinerary(content) {
+function renderItinerary(
+  content,
+  trip
+) {
 
   const items =
-    [...data.itinerary]
+    [...trip.itinerary]
       .sort(
-        (a, b) =>
+        (a,b) =>
           (a.date + a.time)
           .localeCompare(
             b.date + b.time
@@ -882,10 +1211,15 @@ function renderItinerary(content) {
   if (!items.length) {
 
     html += `
+
       <div class="empty">
-        还没有行程<br>
+
+        还没有行程<br><br>
+
         按「＋ 添加」开始吧 ✨
+
       </div>
+
     `;
 
     content.innerHTML = html;
@@ -920,26 +1254,25 @@ function renderItinerary(content) {
         <div class="day">
 
           <div class="day-title">
+
             ${formatDate(date)}
+
           </div>
 
       `;
 
 
-      groups[date]
-        .forEach(item => {
+      groups[date].forEach(item => {
 
-          html += renderItem(
-            item,
-            "itinerary"
-          );
+        html += renderItem(
+          item,
+          "itinerary"
+        );
 
-        });
+      });
 
 
-      html += `
-        </div>
-      `;
+      html += `</div>`;
 
     });
 
@@ -955,16 +1288,17 @@ function renderItinerary(content) {
 
 function renderGeneric(
   content,
+  trip,
   type
 ) {
 
   const titles = {
 
-    hotel: "🏨 酒店",
+    hotel:"🏨 酒店",
 
-    transport: "🚄 交通",
+    transport:"🚄 交通",
 
-    places: "📍 美食 & 景点"
+    places:"📍 美食 & 景点"
 
   };
 
@@ -990,13 +1324,14 @@ function renderGeneric(
   `;
 
 
-  if (!data[type].length) {
+  if (!trip[type].length) {
 
     html += `
 
       <div class="empty">
 
-        还没有资料<br>
+        还没有资料<br><br>
+
         按「＋ 添加」开始吧 ✨
 
       </div>
@@ -1010,15 +1345,99 @@ function renderGeneric(
   }
 
 
-  data[type]
-    .forEach(item => {
+  trip[type].forEach(item => {
 
-      html += renderItem(
-        item,
-        type
-      );
+    html += renderItem(
+      item,
+      type
+    );
 
-    });
+  });
+
+
+  content.innerHTML = html;
+
+}
+
+
+/* =========================================================
+   费用
+========================================================= */
+
+function renderExpense(
+  content,
+  trip
+) {
+
+  const total =
+    trip.expense.reduce(
+      (sum,item) =>
+        sum + Number(item.amount || 0),
+      0
+    );
+
+
+  let html = `
+
+    <div class="section-header">
+
+      <h2>
+        💰 费用
+      </h2>
+
+      <button
+        class="add-button"
+        onclick="openModal('expense')">
+
+        ＋ 添加
+
+      </button>
+
+    </div>
+
+
+    <div class="total-card">
+
+      <div class="total-label">
+        Trip 总费用
+      </div>
+
+      <div class="total-money">
+        S$${total.toFixed(2)}
+      </div>
+
+    </div>
+
+  `;
+
+
+  if (!trip.expense.length) {
+
+    html += `
+
+      <div class="empty">
+
+        还没有费用记录
+
+      </div>
+
+    `;
+
+    content.innerHTML = html;
+
+    return;
+
+  }
+
+
+  trip.expense.forEach(item => {
+
+    html += renderItem(
+      item,
+      "expense"
+    );
+
+  });
 
 
   content.innerHTML = html;
@@ -1064,9 +1483,7 @@ function renderItem(
 
         <div class="item-name">
 
-          ${escapeHTML(
-            item.icon || getIcon(type)
-          )}
+          ${escapeHTML(item.icon || getIcon(type))}
 
           ${escapeHTML(item.name)}
 
@@ -1075,12 +1492,16 @@ function renderItem(
 
         ${
           item.time
-            ?
-            `<div class="item-time">
+          ?
+          `
+            <div class="item-time">
+
               ${escapeHTML(item.time)}
-            </div>`
-            :
-            ""
+
+            </div>
+          `
+          :
+          ""
         }
 
       </div>
@@ -1090,33 +1511,31 @@ function renderItem(
 
         ${
           item.place
-            ?
-            `📍 ${escapeHTML(item.place)}<br>`
-            :
-            ""
+          ?
+          `📍 ${escapeHTML(item.place)}<br>`
+          :
+          ""
         }
 
 
         ${
           item.member
-            ?
-            `👤 ${escapeHTML(item.member)}<br>`
-            :
-            ""
+          ?
+          `👤 ${escapeHTML(item.member)}<br>`
+          :
+          ""
         }
 
 
-        ${
-          extra
-        }
+        ${extra}
 
 
         ${
           item.note
-            ?
-            `<br>📝 ${escapeHTML(item.note)}`
-            :
-            ""
+          ?
+          `<br>📝 ${escapeHTML(item.note)}`
+          :
+          ""
         }
 
       </div>
@@ -1126,39 +1545,39 @@ function renderItem(
 
         ${
           item.link
-            ?
-            `
-              <a
-                class="link-button"
-                href="${escapeHTML(item.link)}"
-                target="_blank"
-                rel="noopener">
+          ?
+          `
+            <a
+              class="link-button"
+              href="${escapeHTML(item.link)}"
+              target="_blank"
+              rel="noopener">
 
-                🔗 打开网页
+              🔗 打开网页
 
-              </a>
-            `
-            :
-            ""
+            </a>
+          `
+          :
+          ""
         }
 
 
         ${
           item.map
-            ?
-            `
-              <a
-                class="link-button"
-                href="${escapeHTML(item.map)}"
-                target="_blank"
-                rel="noopener">
+          ?
+          `
+            <a
+              class="link-button"
+              href="${escapeHTML(item.map)}"
+              target="_blank"
+              rel="noopener">
 
-                🗺️ 打开地图
+              🗺️ 打开地图
 
-              </a>
-            `
-            :
-            ""
+            </a>
+          `
+          :
+          ""
         }
 
 
@@ -1173,5 +1592,1010 @@ function renderItem(
 
         <button
           class="action-button delete-button"
-          onclick="delete
+          onclick="deleteItem('${type}', ${item.id})">
+
+          🗑️ 删除
+
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   Icon
+========================================================= */
+
+function getIcon(type) {
+
+  const icons = {
+
+    itinerary:"📅",
+
+    hotel:"🏨",
+
+    transport:"🚄",
+
+    places:"📍",
+
+    expense:"💰"
+
+  };
+
+  return icons[type] || "📌";
+
+}
+
+
+/* =========================================================
+   Trip Modal
+========================================================= */
+
+function openTripModal(id = null) {
+
+  editingId = id;
+
+  const trip =
+    id
+    ?
+    trips.find(
+      item => item.id === id
+    )
+    :
+    null;
+
+
+  document.getElementById(
+    "modalTitle"
+  ).textContent =
+    trip
+    ?
+    "编辑 Trip"
+    :
+    "新增 Trip";
+
+
+  let html = `
+
+    <label>
+      Trip 名称
+    </label>
+
+    <input
+      id="tripName"
+      placeholder="例如：🇯🇵 日本旅行"
+      value="${escapeHTML(trip?.name || "")}">
+
+
+    <div class="form-row">
+
+      <div>
+
+        <label>
+          开始日期
+        </label>
+
+        <input
+          type="date"
+          id="tripStart"
+          value="${trip?.startDate || ""}">
+
+      </div>
+
+
+      <div>
+
+        <label>
+          结束日期
+        </label>
+
+        <input
+          type="date"
+          id="tripEnd"
+          value="${trip?.endDate || ""}">
+
+      </div>
+
+    </div>
+
+
+    <label>
+      成员
+    </label>
+
+    <div class="member-select">
+
+      ${
+        MEMBERS.map(member => `
+
+          <label class="member-check">
+
+            <input
+              type="checkbox"
+              value="${member}"
+              class="trip-member"
+              ${
+                trip?.members?.includes(member)
+                ?
+                "checked"
+                :
+                ""
+              }>
+
+            ${member}
+
+          </label>
+
+        `).join("")
+      }
+
+    </div>
+
+  `;
+
+
+  document.getElementById(
+    "formArea"
+  ).innerHTML = html;
+
+
+  document.getElementById(
+    "saveButton"
+  ).onclick =
+    saveTrip;
+
+
+  document.getElementById(
+    "modalOverlay"
+  ).classList.add("show");
+
+}
+
+
+/* =========================================================
+   Save Trip
+========================================================= */
+
+function saveTrip() {
+
+  const name =
+    document.getElementById(
+      "tripName"
+    ).value.trim();
+
+
+  const startDate =
+    document.getElementById(
+      "tripStart"
+    ).value;
+
+
+  const endDate =
+    document.getElementById(
+      "tripEnd"
+    ).value;
+
+
+  const members =
+    [...document.querySelectorAll(
+      ".trip-member:checked"
+    )]
+    .map(
+      input => input.value
+    );
+
+
+  if (!name) {
+
+    alert("请输入 Trip 名称");
+
+    return;
+
+  }
+
+
+  if (!startDate || !endDate) {
+
+    alert("请选择 Trip 日期");
+
+    return;
+
+  }
+
+
+  if (!members.length) {
+
+    alert("至少选择一位成员");
+
+    return;
+
+  }
+
+
+  if (editingId) {
+
+    const trip =
+      trips.find(
+        item => item.id === editingId
+      );
+
+    trip.name = name;
+
+    trip.startDate = startDate;
+
+    trip.endDate = endDate;
+
+    trip.members = members;
+
+  }
+
+  else {
+
+    const newTrip = {
+
+      id: Date.now(),
+
+      name,
+
+      startDate,
+
+      endDate,
+
+      members,
+
+      itinerary: [],
+
+      hotel: [],
+
+      transport: [],
+
+      places: [],
+
+      expense: []
+
+    };
+
+
+    trips.push(newTrip);
+
+  }
+
+
+  saveTrips();
+
+  closeModal();
+
+  renderHome();
+
+}
+
+
+/* =========================================================
+   Delete Trip
+========================================================= */
+
+function deleteTrip(id) {
+
+  const trip =
+    trips.find(
+      item => item.id === id
+    );
+
+
+  if (!trip) return;
+
+
+  if (
+    !confirm(
+      `确定要删除「${trip.name}」吗？`
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  trips =
+    trips.filter(
+      item => item.id !== id
+    );
+
+
+  saveTrips();
+
+  renderHome();
+
+}
+
+
+/* =========================================================
+   Item Modal
+========================================================= */
+
+function openModal(
+  type,
+  id = null
+) {
+
+  const trip =
+    getCurrentTrip();
+
+
+  if (!trip) return;
+
+
+  editingId = id;
+
+  editingType = type;
+
+
+  const item =
+    id
+    ?
+    trip[type].find(
+      x => x.id === id
+    )
+    :
+    null;
+
+
+  const titles = {
+
+    itinerary:
+      item
+      ?
+      "编辑行程"
+      :
+      "添加行程",
+
+    hotel:
+      item
+      ?
+      "编辑酒店"
+      :
+      "添加酒店",
+
+    transport:
+      item
+      ?
+      "编辑交通"
+      :
+      "添加交通",
+
+    places:
+      item
+      ?
+      "编辑美食 / 景点"
+      :
+      "添加美食 / 景点",
+
+    expense:
+      item
+      ?
+      "编辑费用"
+      :
+      "添加费用"
+
+  };
+
+
+  document.getElementById(
+    "modalTitle"
+  ).textContent =
+    titles[type];
+
+
+  document.getElementById(
+    "formArea"
+  ).innerHTML =
+    buildForm(
+      type,
+      item,
+      trip
+    );
+
+
+  document.getElementById(
+    "saveButton"
+  ).onclick =
+    saveItem;
+
+
+  document.getElementById(
+    "modalOverlay"
+  ).classList.add("show");
+
+}
+
+
+/* =========================================================
+   Build Form
+========================================================= */
+
+function buildForm(
+  type,
+  item,
+  trip
+) {
+
+  if (type === "itinerary") {
+
+    return `
+
+      <label>日期</label>
+
+      <input
+        type="date"
+        id="fDate"
+        value="${item?.date || ""}">
+
+
+      <label>时间</label>
+
+      <input
+        type="time"
+        id="fTime"
+        value="${item?.time || ""}">
+
+
+      <label>名称</label>
+
+      <input
+        id="fName"
+        placeholder="例如：香港 → 广州"
+        value="${escapeHTML(item?.name || "")}">
+
+
+      <label>图标</label>
+
+      <input
+        id="fIcon"
+        placeholder="例如：✈️ 🍜 🏨"
+        value="${escapeHTML(item?.icon || "")}">
+
+
+      <label>地点</label>
+
+      <input
+        id="fPlace"
+        placeholder="地点"
+        value="${escapeHTML(item?.place || "")}">
+
+
+      <label>谁负责 / 添加</label>
+
+      ${memberSelect(
+        item?.member || "",
+        trip
+      )}
+
+
+      <label>备注</label>
+
+      <textarea
+        id="fNote"
+        placeholder="备注">${escapeHTML(item?.note || "")}</textarea>
+
+
+      <label>网页链接</label>
+
+      <input
+        id="fLink"
+        type="url"
+        placeholder="https://..."
+        value="${escapeHTML(item?.link || "")}">
+
+
+      <label>Google Maps 链接</label>
+
+      <input
+        id="fMap"
+        type="url"
+        placeholder="Google Maps 链接"
+        value="${escapeHTML(item?.map || "")}">
+
+    `;
+
+  }
+
+
+  if (
+    type === "hotel" ||
+    type === "transport" ||
+    type === "places"
+  ) {
+
+    return `
+
+      <label>名称</label>
+
+      <input
+        id="fName"
+        placeholder="名称"
+        value="${escapeHTML(item?.name || "")}">
+
+
+      <label>地点</label>
+
+      <input
+        id="fPlace"
+        placeholder="地点"
+        value="${escapeHTML(item?.place || "")}">
+
+
+      <label>日期</label>
+
+      <input
+        type="date"
+        id="fDate"
+        value="${item?.date || ""}">
+
+
+      <label>时间</label>
+
+      <input
+        type="time"
+        id="fTime"
+        value="${item?.time || ""}">
+
+
+      <label>谁负责 / 添加</label>
+
+      ${memberSelect(
+        item?.member || "",
+        trip
+      )}
+
+
+      <label>备注</label>
+
+      <textarea
+        id="fNote"
+        placeholder="备注">${escapeHTML(item?.note || "")}</textarea>
+
+
+      <label>网页链接</label>
+
+      <input
+        id="fLink"
+        type="url"
+        placeholder="https://..."
+        value="${escapeHTML(item?.link || "")}">
+
+
+      <label>Google Maps 链接</label>
+
+      <input
+        id="fMap"
+        type="url"
+        placeholder="Google Maps 链接"
+        value="${escapeHTML(item?.map || "")}">
+
+    `;
+
+  }
+
+
+  if (type === "expense") {
+
+    return `
+
+      <label>费用名称</label>
+
+      <input
+        id="fName"
+        placeholder="例如：酒店 / 午餐 / 高铁"
+        value="${escapeHTML(item?.name || "")}">
+
+
+      <label>金额（SGD）</label>
+
+      <input
+        type="number"
+        step="0.01"
+        id="fAmount"
+        placeholder="0.00"
+        value="${item?.amount ?? ""}">
+
+
+      <label>谁付款</label>
+
+      ${memberSelect(
+        item?.payer || "",
+        trip,
+        "fPayer"
+      )}
+
+
+      <label>日期</label>
+
+      <input
+        type="date"
+        id="fDate"
+        value="${item?.date || ""}">
+
+
+      <label>备注</label>
+
+      <textarea
+        id="fNote"
+        placeholder="备注">${escapeHTML(item?.note || "")}</textarea>
+
+    `;
+
+  }
+
+}
+
+
+/* =========================================================
+   Member Select
+========================================================= */
+
+function memberSelect(
+  selected,
+  trip,
+  id = "fMember"
+) {
+
+  return `
+
+    <select id="${id}">
+
+      <option value="">
+        请选择
+      </option>
+
+      ${
+        trip.members.map(member => `
+
+          <option
+            value="${member}"
+            ${
+              selected === member
+              ?
+              "selected"
+              :
+              ""
+            }>
+
+            ${escapeHTML(member)}
+
+          </option>
+
+        `).join("")
+      }
+
+    </select>
+
+  `;
+
+}
+
+
+/* =========================================================
+   Save Item
+========================================================= */
+
+function saveItem() {
+
+  const trip =
+    getCurrentTrip();
+
+
+  if (!trip) return;
+
+
+  const type =
+    editingType;
+
+
+  let item;
+
+
+  if (type === "itinerary") {
+
+    item = {
+
+      id:
+        editingId ||
+        Date.now(),
+
+      date:
+        document.getElementById(
+          "fDate"
+        ).value,
+
+      time:
+        document.getElementById(
+          "fTime"
+        ).value,
+
+      icon:
+        document.getElementById(
+          "fIcon"
+        ).value || getIcon(type),
+
+      name:
+        document.getElementById(
+          "fName"
+        ).value.trim(),
+
+      place:
+        document.getElementById(
+          "fPlace"
+        ).value.trim(),
+
+      member:
+        document.getElementById(
+          "fMember"
+        ).value,
+
+      note:
+        document.getElementById(
+          "fNote"
+        ).value.trim(),
+
+      link:
+        document.getElementById(
+          "fLink"
+        ).value.trim(),
+
+      map:
+        document.getElementById(
+          "fMap"
+        ).value.trim()
+
+    };
+
+  }
+
+
+  else if (
+    type === "hotel" ||
+    type === "transport" ||
+    type === "places"
+  ) {
+
+    item = {
+
+      id:
+        editingId ||
+        Date.now(),
+
+      name:
+        document.getElementById(
+          "fName"
+        ).value.trim(),
+
+      place:
+        document.getElementById(
+          "fPlace"
+        ).value.trim(),
+
+      date:
+        document.getElementById(
+          "fDate"
+        ).value,
+
+      time:
+        document.getElementById(
+          "fTime"
+        ).value,
+
+      member:
+        document.getElementById(
+          "fMember"
+        ).value,
+
+      note:
+        document.getElementById(
+          "fNote"
+        ).value.trim(),
+
+      link:
+        document.getElementById(
+          "fLink"
+        ).value.trim(),
+
+      map:
+        document.getElementById(
+          "fMap"
+        ).value.trim()
+
+    };
+
+  }
+
+
+  else if (type === "expense") {
+
+    item = {
+
+      id:
+        editingId ||
+        Date.now(),
+
+      name:
+        document.getElementById(
+          "fName"
+        ).value.trim(),
+
+      amount:
+        Number(
+          document.getElementById(
+            "fAmount"
+          ).value
+        ) || 0,
+
+      payer:
+        document.getElementById(
+          "fPayer"
+        ).value,
+
+      date:
+        document.getElementById(
+          "fDate"
+        ).value,
+
+      note:
+        document.getElementById(
+          "fNote"
+        ).value.trim()
+
+    };
+
+  }
+
+
+  if (!item.name) {
+
+    alert("请输入名称");
+
+    return;
+
+  }
+
+
+  if (editingId) {
+
+    const index =
+      trip[type].findIndex(
+        x => x.id === editingId
+      );
+
+
+    if (index !== -1) {
+
+      trip[type][index] =
+        item;
+
+    }
+
+  }
+
+  else {
+
+    trip[type].push(item);
+
+  }
+
+
+  saveTrips();
+
+  closeModal();
+
+  renderTrip();
+
+}
+
+
+/* =========================================================
+   Delete Item
+========================================================= */
+
+function deleteItem(
+  type,
+  id
+) {
+
+  const trip =
+    getCurrentTrip();
+
+
+  if (!trip) return;
+
+
+  if (
+    !confirm(
+      "确定要删除这个项目吗？"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  trip[type] =
+    trip[type].filter(
+      item => item.id !== id
+    );
+
+
+  saveTrips();
+
+  renderTrip();
+
+}
+
+
+/* =========================================================
+   Close Modal
+========================================================= */
+
+function closeModal() {
+
+  document.getElementById(
+    "modalOverlay"
+  ).classList.remove("show");
+
+  editingId = null;
+
+  editingType = null;
+
+}
+
+
+/* =========================================================
+   Back Home
+========================================================= */
+
+function backHome() {
+
+  currentTripId = null;
+
+  renderHome();
+
+}
+
+
+/* =========================================================
+   点击背景关闭
+========================================================= */
+
+document
+  .getElementById("modalOverlay")
+  .addEventListener(
+    "click",
+    function(event) {
+
+      if (
+        event.target === this
+      ) {
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   初始显示
+========================================================= */
+
+renderHome();
+
+</script>
+
+</body>
+</html>
 ```
