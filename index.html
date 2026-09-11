@@ -1071,7 +1071,609 @@ const MEMBERS = [
   "Vincent",
   "Esther",
   "Tong"
-];
+];  
+/* =========================================================
+   ☁️ Supabase 云端共享
+========================================================= */
+
+const SUPABASE_URL =
+  "https://erszppdihousdwgoavgd.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_VrTQJJscjZjC28622CVGIg_Hq7vY5n4";
+
+const SUPABASE_TABLE =
+  "trips";
+
+let cloudReady = false;
+let cloudSyncing = false;
+let lastCloudSnapshot = "";
+
+function getSupabaseHeaders() {
+
+  return {
+    "apikey":
+      SUPABASE_KEY,
+
+    "Authorization":
+      "Bearer " +
+      SUPABASE_KEY,
+
+    "Content-Type":
+      "application/json"
+  };
+
+}
+
+
+/* =========================================================
+   把本地 Trip 转成 Supabase 格式
+========================================================= */
+
+function tripToCloud(trip) {
+
+  return {
+
+    id:
+      trip.id,
+
+    name:
+      trip.name || "",
+
+    start_date:
+      trip.startDate || null,
+
+    end_date:
+      trip.endDate || null,
+
+    members:
+      trip.members || [],
+
+    itinerary:
+      trip.itinerary || [],
+
+    hotel:
+      trip.hotel || [],
+
+    transport:
+      trip.transport || [],
+
+    places:
+      trip.places || [],
+
+    expense:
+      trip.expense || []
+
+  };
+
+}
+
+
+/* =========================================================
+   Supabase → App 格式
+========================================================= */
+
+function cloudToTrip(row) {
+
+  return {
+
+    id:
+      row.id,
+
+    name:
+      row.name || "",
+
+    startDate:
+      row.start_date || "",
+
+    endDate:
+      row.end_date || "",
+
+    members:
+      row.members || [],
+
+    itinerary:
+      row.itinerary || [],
+
+    hotel:
+      row.hotel || [],
+
+    transport:
+      row.transport || [],
+
+    places:
+      row.places || [],
+
+    expense:
+      row.expense || []
+
+  };
+
+}
+
+
+/* =========================================================
+   上传一个 Trip
+========================================================= */
+
+async function uploadTripToCloud(trip) {
+
+  try {
+
+    const response =
+      await fetch(
+        SUPABASE_URL +
+        "/rest/v1/" +
+        SUPABASE_TABLE +
+        "?on_conflict=id",
+        {
+
+          method: "POST",
+
+          headers: {
+
+            ...getSupabaseHeaders(),
+
+            "Prefer":
+              "resolution=merge-duplicates,return=minimal"
+
+          },
+
+          body:
+            JSON.stringify(
+              tripToCloud(trip)
+            )
+
+        }
+      );
+
+
+    if (!response.ok) {
+
+      const errorText =
+        await response.text();
+
+      console.error(
+        "Supabase 保存失败：",
+        errorText
+      );
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+  catch(error) {
+
+    console.error(
+      "Supabase 连接失败：",
+      error
+    );
+
+    return false;
+
+  }
+
+}
+
+
+/* =========================================================
+   删除云端 Trip
+========================================================= */
+
+async function deleteTripFromCloud(id) {
+
+  try {
+
+    const response =
+      await fetch(
+        SUPABASE_URL +
+        "/rest/v1/" +
+        SUPABASE_TABLE +
+        "?id=eq." +
+        encodeURIComponent(id),
+        {
+
+          method: "DELETE",
+
+          headers:
+            getSupabaseHeaders()
+
+        }
+      );
+
+
+    if (!response.ok) {
+
+      console.error(
+        "Supabase 删除失败",
+        await response.text()
+      );
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+  catch(error) {
+
+    console.error(
+      "Supabase 删除连接失败：",
+      error
+    );
+
+    return false;
+
+  }
+
+}
+
+
+/* =========================================================
+   读取全部 Trips
+========================================================= */
+
+async function loadTripsFromCloud() {
+
+  try {
+
+    const response =
+      await fetch(
+        SUPABASE_URL +
+        "/rest/v1/" +
+        SUPABASE_TABLE +
+        "?select=*",
+        {
+
+          method: "GET",
+
+          headers:
+            getSupabaseHeaders()
+
+        }
+      );
+
+
+    if (!response.ok) {
+
+      console.error(
+        "Supabase 读取失败：",
+        await response.text()
+      );
+
+      return null;
+
+    }
+
+
+    const rows =
+      await response.json();
+
+
+    return rows.map(
+      cloudToTrip
+    );
+
+  }
+  catch(error) {
+
+    console.error(
+      "Supabase 读取连接失败：",
+      error
+    );
+
+    return null;
+
+  }
+
+}
+
+
+/* =========================================================
+   第一次启动云端同步
+========================================================= */
+
+async function initCloudSync() {
+
+  if (cloudReady) {
+    return;
+  }
+
+
+  const cloudTrips =
+    await loadTripsFromCloud();
+
+
+  /*
+    Supabase 里面已经有资料
+    → 以云端资料为准
+  */
+
+  if (
+    cloudTrips &&
+    cloudTrips.length
+  ) {
+
+    trips =
+      cloudTrips;
+
+
+    localStorage.setItem(
+      "travelTrips",
+      JSON.stringify(trips)
+    );
+
+
+    lastCloudSnapshot =
+      JSON.stringify(trips);
+
+
+    cloudReady = true;
+
+
+    if (
+      currentTripId !== null
+    ) {
+
+      renderTrip();
+
+    }
+    else {
+
+      renderHome();
+
+    }
+
+  }
+
+
+  /*
+    Supabase 是空的
+    → 把现在手机里的资料上传上去
+  */
+
+  else if (
+    cloudTrips &&
+    !cloudTrips.length
+  ) {
+
+    for (
+      const trip of trips
+    ) {
+
+      await uploadTripToCloud(
+        trip
+      );
+
+    }
+
+
+    lastCloudSnapshot =
+      JSON.stringify(trips);
+
+
+    cloudReady = true;
+
+  }
+
+
+  /*
+    网络失败
+    → 暂时继续使用 localStorage
+  */
+
+  else {
+
+    console.warn(
+      "暂时无法连接 Supabase，继续使用本地资料"
+    );
+
+    cloudReady = true;
+
+  }
+
+
+  startCloudPolling();
+
+}
+
+
+/* =========================================================
+   本地资料 → 云端
+========================================================= */
+
+async function syncTripsToCloud() {
+
+  if (
+    !cloudReady ||
+    cloudSyncing
+  ) {
+
+    return;
+
+  }
+
+
+  cloudSyncing = true;
+
+
+  try {
+
+    for (
+      const trip of trips
+    ) {
+
+      await uploadTripToCloud(
+        trip
+      );
+
+    }
+
+
+    lastCloudSnapshot =
+      JSON.stringify(trips);
+
+  }
+  finally {
+
+    cloudSyncing = false;
+
+  }
+
+}
+
+
+/* =========================================================
+   云端自动检查
+   每 5 秒检查一次
+========================================================= */
+
+let cloudPollingStarted =
+  false;
+
+
+function startCloudPolling() {
+
+  if (
+    cloudPollingStarted
+  ) {
+
+    return;
+
+  }
+
+
+  cloudPollingStarted =
+    true;
+
+
+  setInterval(
+    syncFromCloud,
+    5000
+  );
+
+}
+
+
+/* =========================================================
+   云端 → 当前页面
+========================================================= */
+
+async function syncFromCloud() {
+
+  if (
+    !cloudReady ||
+    cloudSyncing
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+    正在编辑 Modal 时不要强行刷新
+    避免把用户正在输入的资料弄掉
+  */
+
+  const modal =
+    document.getElementById(
+      "modalOverlay"
+    );
+
+
+  if (
+    modal &&
+    modal.classList.contains(
+      "show"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  const cloudTrips =
+    await loadTripsFromCloud();
+
+
+  if (
+    !cloudTrips
+  ) {
+
+    return;
+
+  }
+
+
+  const snapshot =
+    JSON.stringify(
+      cloudTrips
+    );
+
+
+  if (
+    snapshot ===
+    lastCloudSnapshot
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+    云端有变化
+    → 更新本地
+  */
+
+  trips =
+    cloudTrips;
+
+
+  localStorage.setItem(
+    "travelTrips",
+    JSON.stringify(trips)
+  );
+
+
+  lastCloudSnapshot =
+    snapshot;
+
+
+  /*
+    保留目前打开的 Trip
+  */
+
+  if (
+    currentTripId !== null &&
+    trips.some(
+      trip =>
+        String(trip.id) ===
+        String(currentTripId)
+    )
+  ) {
+
+    renderTrip();
+
+  }
+  else {
+
+    currentTripId =
+      null;
+
+    renderHome();
+
+  }
+
+}  
 
 
 /* =========================================================
@@ -1657,6 +2259,19 @@ function saveTrips() {
     "travelTrips",
     JSON.stringify(trips)
   );
+
+
+  /*
+    本地保存后，
+    如果 Supabase 已经准备好，
+    同时上传云端
+  */
+
+  if (cloudReady) {
+
+    syncTripsToCloud();
+
+  }
 
 }
 
@@ -8510,6 +9125,11 @@ async function deleteItem(
 syncAllExistingLinks();
 
 saveTrips();
+
+/*
+  ☁️ 启动 Supabase 多人共享
+*/
+initCloudSync();
 
 
 </script>
