@@ -7158,6 +7158,1346 @@ function renderExpenseCard(
 
 renderHome();
 
+  /* =========================================================
+   ★ 日期 / 时间双向联动 + 费用联动修正版
+   ========================================================= */
+
+let isDateTimeSyncing = false;
+
+
+/* =========================================================
+   找到来源对应的行程
+   ========================================================= */
+
+function findLinkedItinerary(
+  trip,
+  type,
+  sourceId
+) {
+
+  return (
+    trip.itinerary || []
+  ).find(
+    itinerary =>
+      itinerary.sourceType === type &&
+      String(itinerary.sourceId) ===
+      String(sourceId)
+  );
+
+}
+
+
+/* =========================================================
+   同步某个行程的费用日期
+   费用金额、币种、付款人、分摊人员、备注
+   全部不会改变
+   ========================================================= */
+
+function syncExpensesForItinerary(
+  trip,
+  itineraryId
+) {
+
+  if (!trip.expense) {
+    trip.expense = [];
+  }
+
+  const itinerary =
+    (trip.itinerary || []).find(
+      item =>
+        String(item.id) ===
+        String(itineraryId)
+    );
+
+  if (!itinerary) {
+    return;
+  }
+
+  trip.expense.forEach(
+    expense => {
+
+      if (
+        expense.itineraryId != null &&
+        String(expense.itineraryId) ===
+        String(itineraryId)
+      ) {
+
+        expense.date =
+          itinerary.date || "";
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   行程 → 酒店 / 交通 / 美食景点
+   只同步日期 / 时间
+   ========================================================= */
+
+function syncSourceFromItinerary(
+  trip,
+  itinerary
+) {
+
+  if (
+    !itinerary ||
+    !itinerary.sourceType ||
+    itinerary.sourceId == null
+  ) {
+    return;
+  }
+
+  const type =
+    itinerary.sourceType;
+
+  if (
+    type !== "hotel" &&
+    type !== "transport" &&
+    type !== "places"
+  ) {
+    return;
+  }
+
+  const source =
+    (trip[type] || []).find(
+      item =>
+        String(item.id) ===
+        String(itinerary.sourceId)
+    );
+
+  if (!source) {
+    return;
+  }
+
+  if (isDateTimeSyncing) {
+    return;
+  }
+
+  isDateTimeSyncing = true;
+
+  try {
+
+    /* =========================
+       酒店
+       行程日期 → 入住日期
+       行程结束日期 → 退房日期
+       ========================= */
+
+    if (
+      type === "hotel"
+    ) {
+
+      source.startDate =
+        itinerary.date || "";
+
+      source.endDate =
+        itinerary.endDate || "";
+
+    }
+
+
+    /* =========================
+       交通
+       行程日期 → 出发日期
+       行程时间 → 出发时间
+       行程结束时间 → 到达时间
+       ========================= */
+
+    else if (
+      type === "transport"
+    ) {
+
+      source.startDate =
+        itinerary.date || "";
+
+      source.startTime =
+        itinerary.time || "";
+
+      source.endTime =
+        itinerary.endTime || "";
+
+      /*
+        保留旧版 date / time 字段兼容
+      */
+
+      source.date =
+        source.startDate;
+
+      source.time =
+        source.startTime;
+
+    }
+
+
+    /* =========================
+       美食 / 景点
+       行程日期 → 日期
+       行程时间 → 时间
+       ========================= */
+
+    else if (
+      type === "places"
+    ) {
+
+      source.date =
+        itinerary.date || "";
+
+      source.time =
+        itinerary.time || "";
+
+    }
+
+  }
+  finally {
+
+    isDateTimeSyncing = false;
+
+  }
+
+
+  /*
+    行程日期改变后，
+    所有关联费用日期一起改变
+  */
+
+  syncExpensesForItinerary(
+    trip,
+    itinerary.id
+  );
+
+}
+
+
+/* =========================================================
+   酒店 / 交通 / 美食景点
+   → 行程
+   只同步日期 / 时间
+   ========================================================= */
+
+function syncItineraryFromSource(
+  trip,
+  type,
+  source
+) {
+
+  if (
+    !source ||
+    (
+      type !== "hotel" &&
+      type !== "transport" &&
+      type !== "places"
+    )
+  ) {
+    return;
+  }
+
+  const itinerary =
+    findLinkedItinerary(
+      trip,
+      type,
+      source.id
+    );
+
+  if (!itinerary) {
+    return;
+  }
+
+  if (isDateTimeSyncing) {
+    return;
+  }
+
+  isDateTimeSyncing = true;
+
+  try {
+
+    /* =========================
+       酒店 → 行程
+       ========================= */
+
+    if (
+      type === "hotel"
+    ) {
+
+      itinerary.date =
+        source.startDate || "";
+
+      itinerary.endDate =
+        source.endDate || "";
+
+      /*
+        酒店没有时间，
+        所以不要碰 itinerary.time
+        和 itinerary.endTime
+      */
+
+    }
+
+
+    /* =========================
+       交通 → 行程
+       ========================= */
+
+    else if (
+      type === "transport"
+    ) {
+
+      itinerary.date =
+        source.startDate ||
+        source.date ||
+        "";
+
+      itinerary.time =
+        source.startTime ||
+        source.departTime ||
+        source.time ||
+        "";
+
+      itinerary.endTime =
+        source.endTime ||
+        source.arriveTime ||
+        "";
+
+      /*
+        交通没有结束日期，
+        所以不要清除 itinerary.endDate
+      */
+
+    }
+
+
+    /* =========================
+       美食 / 景点 → 行程
+       ========================= */
+
+    else if (
+      type === "places"
+    ) {
+
+      itinerary.date =
+        source.date || "";
+
+      itinerary.time =
+        source.time || "";
+
+      /*
+        美食景点没有结束日期 / 结束时间，
+        所以不要清除 itinerary.endDate
+        和 itinerary.endTime
+      */
+
+    }
+
+  }
+  finally {
+
+    isDateTimeSyncing = false;
+
+  }
+
+
+  /*
+    行程日期跟着改变后，
+    关联费用也跟着改变
+  */
+
+  syncExpensesForItinerary(
+    trip,
+    itinerary.id
+  );
+
+}
+
+
+/* =========================================================
+   初始化旧资料
+   如果以前已经有「加入行程」的资料，
+   自动建立正确的日期 / 时间关系
+   ========================================================= */
+
+function syncAllExistingLinks() {
+
+  trips.forEach(
+    trip => {
+
+      if (!trip.itinerary) {
+        trip.itinerary = [];
+      }
+
+      if (!trip.expense) {
+        trip.expense = [];
+      }
+
+      trip.itinerary.forEach(
+        itinerary => {
+
+          if (
+            itinerary.sourceType &&
+            itinerary.sourceId != null
+          ) {
+
+            /*
+              以目前行程资料作为第一次同步的基准
+            */
+
+            syncSourceFromItinerary(
+              trip,
+              itinerary
+            );
+
+          }
+
+          /*
+            无论有没有 source，
+            只要费用属于这个行程，
+            日期都跟行程一致
+          */
+
+          syncExpensesForItinerary(
+            trip,
+            itinerary.id
+          );
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   ★ 覆盖原本 saveItem()
+   ========================================================= */
+
+function saveItem() {
+
+  const trip =
+    getCurrentTrip();
+
+  if (!trip) {
+    return;
+  }
+
+  const type =
+    editingType;
+
+  let item;
+
+
+  /* =====================================================
+     行程
+     ===================================================== */
+
+  if (
+    type === "itinerary"
+  ) {
+
+    const oldItem =
+      editingId
+      ?
+      trip.itinerary.find(
+        x =>
+          String(x.id) ===
+          String(editingId)
+      )
+      :
+      null;
+
+
+    item = {
+
+      id:
+        editingId ||
+        createId(),
+
+      date:
+        document.getElementById(
+          "fDate"
+        ).value,
+
+      time:
+        document.getElementById(
+          "fTime"
+        ).value,
+
+      endDate:
+        document.getElementById(
+          "fEndDate"
+        ).value,
+
+      endTime:
+        document.getElementById(
+          "fEndTime"
+        ).value,
+
+      icon:
+        document.getElementById(
+          "fIcon"
+        ).value ||
+        getIcon(type),
+
+      name:
+        document.getElementById(
+          "fName"
+        ).value.trim(),
+
+      place:
+        document.getElementById(
+          "fPlace"
+        ).value.trim(),
+
+      member:
+        document.getElementById(
+          "fMember"
+        ).value,
+
+      note:
+        document.getElementById(
+          "fNote"
+        ).value.trim(),
+
+      link:
+        document.getElementById(
+          "fLink"
+        ).value.trim(),
+
+      map:
+        document.getElementById(
+          "fMap"
+        ).value.trim()
+
+    };
+
+
+    /*
+      ★ 保留原来的关联关系
+    */
+
+    if (oldItem) {
+
+      if (
+        oldItem.sourceType
+      ) {
+
+        item.sourceType =
+          oldItem.sourceType;
+
+      }
+
+      if (
+        oldItem.sourceId !==
+        undefined
+      ) {
+
+        item.sourceId =
+          oldItem.sourceId;
+
+      }
+
+    }
+
+  }
+
+
+  /* =====================================================
+     酒店
+     ===================================================== */
+
+  else if (
+    type === "hotel"
+  ) {
+
+    item = {
+
+      id:
+        editingId ||
+        createId(),
+
+      name:
+        document.getElementById(
+          "fName"
+        ).value.trim(),
+
+      place:
+        document.getElementById(
+          "fPlace"
+        ).value.trim(),
+
+      startDate:
+        document.getElementById(
+          "fStartDate"
+        ).value,
+
+      endDate:
+        document.getElementById(
+          "fEndDate"
+        ).value,
+
+      member:
+        document.getElementById(
+          "fMember"
+        ).value,
+
+      note:
+        document.getElementById(
+          "fNote"
+        ).value.trim(),
+
+      link:
+        document.getElementById(
+          "fLink"
+        ).value.trim(),
+
+      map:
+        document.getElementById(
+          "fMap"
+        ).value.trim()
+
+    };
+
+  }
+
+
+  /* =====================================================
+     交通
+     ===================================================== */
+
+  else if (
+    type === "transport"
+  ) {
+
+    item = {
+
+      id:
+        editingId ||
+        createId(),
+
+      name:
+        document.getElementById(
+          "fName"
+        ).value.trim(),
+
+      place:
+        document.getElementById(
+          "fPlace"
+        ).value.trim(),
+
+      startDate:
+        document.getElementById(
+          "fStartDate"
+        ).value,
+
+      startTime:
+        document.getElementById(
+          "fStartTime"
+        ).value,
+
+      endTime:
+        document.getElementById(
+          "fEndTime"
+        ).value,
+
+      member:
+        document.getElementById(
+          "fMember"
+        ).value,
+
+      note:
+        document.getElementById(
+          "fNote"
+        ).value.trim(),
+
+      map:
+        document.getElementById(
+          "fMap"
+        ).value.trim(),
+
+      link:
+        ""
+
+    };
+
+    /*
+      保留旧版字段
+    */
+
+    item.date =
+      item.startDate;
+
+    item.time =
+      item.startTime;
+
+  }
+
+
+  /* =====================================================
+     美食 / 景点
+     ===================================================== */
+
+  else if (
+    type === "places"
+  ) {
+
+    item = {
+
+      id:
+        editingId ||
+        createId(),
+
+      category:
+        document.getElementById(
+          "fCategory"
+        ).value ||
+        "food",
+
+      name:
+        document.getElementById(
+          "fName"
+        ).value.trim(),
+
+      place:
+        document.getElementById(
+          "fPlace"
+        ).value.trim(),
+
+      date:
+        document.getElementById(
+          "fDate"
+        ).value,
+
+      time:
+        document.getElementById(
+          "fTime"
+        ).value,
+
+      member:
+        document.getElementById(
+          "fMember"
+        ).value,
+
+      note:
+        document.getElementById(
+          "fNote"
+        ).value.trim(),
+
+      link:
+        document.getElementById(
+          "fLink"
+        ).value.trim(),
+
+      map:
+        document.getElementById(
+          "fMap"
+        ).value.trim()
+
+    };
+
+  }
+
+
+  /* =====================================================
+     费用
+     ===================================================== */
+
+  else if (
+    type === "expense"
+  ) {
+
+    const participants =
+      [
+        ...document.querySelectorAll(
+          ".expense-participant:checked"
+        )
+      ]
+      .map(
+        input =>
+          input.value
+      );
+
+
+    const oldExpense =
+      editingId
+      ?
+      trip.expense.find(
+        x =>
+          String(x.id) ===
+          String(editingId)
+      )
+      :
+      null;
+
+
+    const currency =
+      (
+        document.getElementById(
+          "fCurrency"
+        ).value.trim() ||
+        "SGD"
+      )
+      .toUpperCase();
+
+
+    /*
+      保留原来的 itineraryId
+    */
+
+    const linkedItineraryId =
+      editingId
+      ?
+      (
+        oldExpense?.itineraryId ||
+        null
+      )
+      :
+      expenseItineraryId;
+
+
+    /*
+      ★ 如果费用属于某个行程，
+      日期永远使用行程日期
+    */
+
+    let expenseDate =
+      document.getElementById(
+        "fDate"
+      ).value;
+
+
+    if (
+      linkedItineraryId != null
+    ) {
+
+      const linkedItinerary =
+        trip.itinerary.find(
+          itinerary =>
+            String(itinerary.id) ===
+            String(linkedItineraryId)
+        );
+
+      if (linkedItinerary) {
+
+        expenseDate =
+          linkedItinerary.date || "";
+
+      }
+
+    }
+
+
+    item = {
+
+      id:
+        editingId ||
+        createId(),
+
+      itineraryId:
+        linkedItineraryId,
+
+      name:
+        document.getElementById(
+          "fName"
+        ).value.trim(),
+
+      amount:
+        Number(
+          document.getElementById(
+            "fAmount"
+          ).value
+        ) || 0,
+
+      currency,
+
+      payer:
+        document.getElementById(
+          "fPayer"
+        ).value,
+
+      participants,
+
+      date:
+        expenseDate,
+
+      note:
+        document.getElementById(
+          "fNote"
+        ).value.trim()
+
+    };
+
+  }
+
+
+  /* =====================================================
+     基本检查
+     ===================================================== */
+
+  if (
+    !item ||
+    !item.name
+  ) {
+
+    alert(
+      "请输入名称"
+    );
+
+    return;
+
+  }
+
+
+  if (
+    type === "expense" &&
+    item.amount <= 0
+  ) {
+
+    alert(
+      "请输入费用金额"
+    );
+
+    return;
+
+  }
+
+
+  if (
+    type === "expense" &&
+    !item.payer
+  ) {
+
+    alert(
+      "请选择谁付款"
+    );
+
+    return;
+
+  }
+
+
+  if (
+    type === "expense" &&
+    !item.participants.length
+  ) {
+
+    alert(
+      "请选择至少一位分摊成员"
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     保存
+     ===================================================== */
+
+  if (
+    editingId
+  ) {
+
+    const index =
+      trip[type].findIndex(
+        x =>
+          String(x.id) ===
+          String(editingId)
+      );
+
+    if (
+      index !== -1
+    ) {
+
+      trip[type][index] =
+        item;
+
+    }
+
+  }
+  else {
+
+    trip[type].push(
+      item
+    );
+
+  }
+
+
+  /* =====================================================
+     ★ 保存后进行双向同步
+     ===================================================== */
+
+  if (
+    type === "itinerary"
+  ) {
+
+    /*
+      行程 → 酒店 / 交通 / 美食景点
+    */
+
+    syncSourceFromItinerary(
+      trip,
+      item
+    );
+
+    /*
+      行程 → 费用
+    */
+
+    syncExpensesForItinerary(
+      trip,
+      item.id
+    );
+
+  }
+
+
+  else if (
+    type === "hotel" ||
+    type === "transport" ||
+    type === "places"
+  ) {
+
+    /*
+      酒店 / 交通 / 美食景点
+      → 行程
+    */
+
+    syncItineraryFromSource(
+      trip,
+      type,
+      item
+    );
+
+  }
+
+
+  else if (
+    type === "expense"
+  ) {
+
+    /*
+      如果费用有对应行程，
+      再确保日期正确
+    */
+
+    if (
+      item.itineraryId != null
+    ) {
+
+      syncExpensesForItinerary(
+        trip,
+        item.itineraryId
+      );
+
+    }
+
+  }
+
+
+  saveTrips();
+
+  closeModal();
+
+  renderTrip();
+
+}
+
+
+/* =========================================================
+   ★ 覆盖原本 deleteItem()
+   ========================================================= */
+
+async function deleteItem(
+  type,
+  id
+) {
+
+  const trip =
+    getCurrentTrip();
+
+  if (!trip) {
+    return;
+  }
+
+
+  if (
+    !confirm(
+      "确定要删除这个项目吗？"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     删除费用
+     ===================================================== */
+
+  if (
+    type === "expense"
+  ) {
+
+    trip.expense =
+      trip.expense.filter(
+        item =>
+          String(item.id) !==
+          String(id)
+      );
+
+  }
+
+
+  /* =====================================================
+     删除行程
+     → 删除关联费用
+     → 删除行程文件
+     ===================================================== */
+
+  else if (
+    type === "itinerary"
+  ) {
+
+    const itineraryId =
+      id;
+
+
+    /*
+      删除行程关联费用
+    */
+
+    trip.expense =
+      (trip.expense || [])
+      .filter(
+        expense =>
+          !(
+            expense.itineraryId != null &&
+            String(
+              expense.itineraryId
+            ) ===
+            String(itineraryId)
+          )
+      );
+
+
+    /*
+      删除行程文件
+    */
+
+    try {
+
+      const files =
+        await getFilesForItinerary(
+          itineraryId
+        );
+
+      for (
+        const file of files
+      ) {
+
+        await deleteFileFromDB(
+          file.id
+        );
+
+      }
+
+    }
+    catch(error) {
+
+      console.error(
+        "清理行程文件失败",
+        error
+      );
+
+    }
+
+
+    /*
+      删除行程本身
+    */
+
+    trip.itinerary =
+      trip.itinerary.filter(
+        item =>
+          String(item.id) !==
+          String(itineraryId)
+      );
+
+  }
+
+
+  /* =====================================================
+     删除酒店 / 交通 / 美食景点
+     → 对应行程删除
+     → 对应费用删除
+     ===================================================== */
+
+  else if (
+    type === "hotel" ||
+    type === "transport" ||
+    type === "places"
+  ) {
+
+    /*
+      先找出所有相关行程
+    */
+
+    const linkedItineraries =
+      (trip.itinerary || [])
+      .filter(
+        itineraryItem =>
+          itineraryItem.sourceType ===
+            type &&
+          String(
+            itineraryItem.sourceId
+          ) ===
+          String(id)
+      );
+
+
+    const linkedIds =
+      linkedItineraries.map(
+        itinerary =>
+          itinerary.id
+      );
+
+
+    /*
+      删除这些行程对应的费用
+    */
+
+    trip.expense =
+      (trip.expense || [])
+      .filter(
+        expense =>
+          !linkedIds.some(
+            itineraryId =>
+              expense.itineraryId != null &&
+              String(
+                expense.itineraryId
+              ) ===
+              String(itineraryId)
+          )
+      );
+
+
+    /*
+      删除这些行程的文件
+    */
+
+    for (
+      const itineraryId of linkedIds
+    ) {
+
+      try {
+
+        const files =
+          await getFilesForItinerary(
+            itineraryId
+          );
+
+        for (
+          const file of files
+        ) {
+
+          await deleteFileFromDB(
+            file.id
+          );
+
+        }
+
+      }
+      catch(error) {
+
+        console.error(
+          "清理关联行程文件失败",
+          error
+        );
+
+      }
+
+    }
+
+
+    /*
+      删除对应行程
+    */
+
+    trip.itinerary =
+      (trip.itinerary || [])
+      .filter(
+        itineraryItem =>
+          !(
+            itineraryItem.sourceType ===
+              type &&
+            String(
+              itineraryItem.sourceId
+            ) ===
+            String(id)
+          )
+      );
+
+
+    /*
+      最后删除酒店 / 交通 /
+      美食景点本身
+    */
+
+    trip[type] =
+      (trip[type] || [])
+      .filter(
+        item =>
+          String(item.id) !==
+          String(id)
+      );
+
+  }
+
+
+  else {
+
+    /*
+      其他类型的安全处理
+    */
+
+    trip[type] =
+      (trip[type] || [])
+      .filter(
+        item =>
+          String(item.id) !==
+          String(id)
+      );
+
+  }
+
+
+  saveTrips();
+
+
+  viewingId = null;
+
+  viewingType = null;
+
+
+  renderTrip();
+
+}
+
+
+/* =========================================================
+   ★ 第一次加载时，把现有已关联资料同步一次
+   ========================================================= */
+
+syncAllExistingLinks();
+
+saveTrips();
+
+
 </script>
 
 </body>
