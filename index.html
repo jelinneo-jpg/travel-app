@@ -5102,7 +5102,7 @@ function openModal(
 ========================================================= */
 
 function openExpenseModal(
-  itineraryId
+  itineraryId = null
 ) {
 
   const trip =
@@ -5112,21 +5112,29 @@ function openExpenseModal(
   if (!trip) return;
 
 
-  const itinerary =
-    trip.itinerary.find(
-      item =>
-        item.id ===
-        itineraryId
-    );
+  let itinerary = null;
 
 
-  if (!itinerary) return;
+  if (
+    itineraryId !== null &&
+    itineraryId !== undefined
+  ) {
+
+    itinerary =
+      trip.itinerary.find(
+        item =>
+          String(item.id) ===
+          String(itineraryId)
+      );
+
+  }
 
 
   editingId = null;
 
   editingType =
     "expense";
+
 
   expenseItineraryId =
     itineraryId;
