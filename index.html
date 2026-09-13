@@ -841,6 +841,125 @@ button {
   font-weight: 800;
 }
 
+
+/* =========================
+   Confirm Dialog
+========================= */
+
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  padding: 18px;
+  align-items: center;
+  justify-content: center;
+  background:
+    rgba(50,35,30,.45);
+}
+
+.confirm-overlay.show {
+  display: flex;
+}
+
+.confirm-box {
+  width: min(360px,100%);
+  padding: 22px;
+  background: white;
+  border-radius: 20px;
+  box-shadow:
+    0 15px 40px
+    rgba(120,80,60,.2);
+}
+
+.confirm-message {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4d4140;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.confirm-danger {
+  background: #d76c6c !important;
+}
+
+
+/* =========================
+   File Preview
+========================= */
+
+.file-preview-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: #000;
+  flex-direction: column;
+}
+
+.file-preview-overlay.show {
+  display: flex;
+}
+
+.file-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  padding-top:
+    calc(14px + env(safe-area-inset-top));
+  background: #1c1c1c;
+  color: white;
+}
+
+.file-preview-name {
+  min-width: 0;
+  flex: 1;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-preview-close {
+  flex-shrink: 0;
+  border: 0;
+  background: rgba(255,255,255,.18);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.file-preview-body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.file-preview-body img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.file-preview-body iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: white;
+}
+
 label {
   display: block;
   margin: 12px 0 6px;
@@ -962,6 +1081,21 @@ textarea {
 
 
 /* =========================
+   Stay combined section
+========================= */
+
+.subsection-title {
+  margin: 4px 2px 10px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #6d5f5b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+/* =========================
    手机
 ========================= */
 
@@ -1060,6 +1194,85 @@ textarea {
 </div>
 
 
+<!-- =========================
+     Confirm Dialog
+     （替代系统 confirm，
+     iOS 主屏幕全屏模式下
+     系统 confirm 不会弹出）
+========================= -->
+
+<div
+  class="confirm-overlay"
+  id="confirmOverlay">
+
+  <div class="confirm-box">
+
+    <div
+      class="confirm-message"
+      id="confirmMessage">
+    </div>
+
+    <div class="confirm-buttons">
+
+      <button
+        class="cancel-button"
+        id="confirmCancelBtn">
+
+        取消
+
+      </button>
+
+      <button
+        class="save-button confirm-danger"
+        id="confirmOkBtn">
+
+        删除
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     File Preview
+     （PDF / 照片 直接在
+     App 内预览，
+     不再跳出去新开页面）
+========================= -->
+
+<div
+  class="file-preview-overlay"
+  id="filePreviewOverlay">
+
+  <div class="file-preview-header">
+
+    <div
+      class="file-preview-name"
+      id="filePreviewName">
+    </div>
+
+    <button
+      class="file-preview-close"
+      onclick="closeFilePreview()">
+
+      ✕ 关闭
+
+    </button>
+
+  </div>
+
+  <div
+    class="file-preview-body"
+    id="filePreviewBody">
+  </div>
+
+</div>
+
+
 <script>
 
 /* =========================================================
@@ -1072,6 +1285,209 @@ const MEMBERS = [
   "Esther",
   "Tong"
 ];
+
+
+/* =========================================================
+   自定义确认弹窗
+   （代替系统 confirm()，
+   iOS 加到主屏幕后系统 confirm
+   不会显示，导致按钮像没反应）
+========================================================= */
+
+function showConfirm(
+  message
+) {
+
+  return new Promise(
+    resolve => {
+
+      const overlay =
+        document.getElementById(
+          "confirmOverlay"
+        );
+
+      const messageBox =
+        document.getElementById(
+          "confirmMessage"
+        );
+
+      const okBtn =
+        document.getElementById(
+          "confirmOkBtn"
+        );
+
+      const cancelBtn =
+        document.getElementById(
+          "confirmCancelBtn"
+        );
+
+
+      messageBox.textContent =
+        message;
+
+      overlay.classList.add(
+        "show"
+      );
+
+
+      function cleanup(
+        result
+      ) {
+
+        overlay.classList.remove(
+          "show"
+        );
+
+        okBtn.removeEventListener(
+          "click",
+          onOk
+        );
+
+        cancelBtn.removeEventListener(
+          "click",
+          onCancel
+        );
+
+        overlay.removeEventListener(
+          "click",
+          onOverlayClick
+        );
+
+        resolve(result);
+
+      }
+
+
+      function onOk() {
+
+        cleanup(true);
+
+      }
+
+
+      function onCancel() {
+
+        cleanup(false);
+
+      }
+
+
+      function onOverlayClick(
+        event
+      ) {
+
+        if (
+          event.target === overlay
+        ) {
+
+          cleanup(false);
+
+        }
+
+      }
+
+
+      okBtn.addEventListener(
+        "click",
+        onOk
+      );
+
+      cancelBtn.addEventListener(
+        "click",
+        onCancel
+      );
+
+      overlay.addEventListener(
+        "click",
+        onOverlayClick
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   文件预览
+   （PDF / 图片 直接在
+   App 内弹出预览，
+   不需要新开页面或下载）
+========================================================= */
+
+function openFilePreview(
+  url,
+  kind,
+  name
+) {
+
+  const body =
+    document.getElementById(
+      "filePreviewBody"
+    );
+
+  const nameEl =
+    document.getElementById(
+      "filePreviewName"
+    );
+
+
+  nameEl.textContent =
+    name || "";
+
+
+  body.innerHTML = "";
+
+
+  if (kind === "image") {
+
+    const img =
+      document.createElement(
+        "img"
+      );
+
+    img.src = url;
+
+    body.appendChild(
+      img
+    );
+
+  }
+  else {
+
+    const iframe =
+      document.createElement(
+        "iframe"
+      );
+
+    iframe.src = url;
+
+    body.appendChild(
+      iframe
+    );
+
+  }
+
+
+  document.getElementById(
+    "filePreviewOverlay"
+  ).classList.add("show");
+
+}
+
+
+function closeFilePreview() {
+
+  document.getElementById(
+    "filePreviewOverlay"
+  ).classList.remove("show");
+
+
+  document.getElementById(
+    "filePreviewBody"
+  ).innerHTML = "";
+
+}
 
 
 /* =========================================================
@@ -1337,7 +1753,11 @@ let viewingType = null;
 
 let placesSearchKeyword = "";
 
-let placesCategoryFilter = "all";
+let placesFormCategory = "food";
+
+let stayCategoryFilter = "all";
+
+let scenicCategoryFilter = "all";
 
 
 /* =========================================================
@@ -1411,6 +1831,44 @@ function openFileDB() {
 }
 
 
+function readFileAsDataURL(
+  file
+) {
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        function() {
+
+          resolve(
+            reader.result
+          );
+
+        };
+
+      reader.onerror =
+        function() {
+
+          reject(
+            reader.error
+          );
+
+        };
+
+      reader.readAsDataURL(
+        file
+      );
+
+    }
+  );
+
+}
+
+
 async function saveFileToDB(
   file,
   itineraryId
@@ -1426,6 +1884,27 @@ async function saveFileToDB(
     Math.random()
       .toString(36)
       .slice(2);
+
+
+  /*
+    ★ 改用 Base64 字符串存储，
+
+    Safari 的 IndexedDB
+    存储原生 Blob / File
+    有已知 bug，读出来的资料
+    有机会是空的或损坏的，
+
+    导致预览黑屏、
+    却完全不会报错。
+
+    存成字符串就不会有这个问题。
+  */
+
+  const dataUrl =
+    await readFileAsDataURL(
+      file
+    );
+
 
   return new Promise(
     (resolve, reject) => {
@@ -1460,8 +1939,8 @@ async function saveFileToDB(
         createdAt:
           new Date().toISOString(),
 
-        blob:
-          file
+        data:
+          dataUrl
 
       };
 
@@ -1659,14 +2138,6 @@ function saveTrips() {
   );
 
 }
-function saveTrips() {
-
-  localStorage.setItem(
-    "travelTrips",
-    JSON.stringify(trips)
-  );
-
-}
 
 /* =========================================================
    ID
@@ -1829,9 +2300,15 @@ function getPlaceCategoryLabel(
   category
 ) {
 
-  return category === "scenic"
-    ? "🏞️ 景点"
-    : "🍜 美食";
+  if (category === "scenic") {
+    return "🏞️ 景点";
+  }
+
+  if (category === "shopping") {
+    return "🛍️ 购物";
+  }
+
+  return "🍜 美食";
 
 }
 
@@ -1844,9 +2321,15 @@ function getPlaceIcon(
     return item.icon;
   }
 
-  return item.category === "scenic"
-    ? "🏞️"
-    : "🍜";
+  if (item.category === "scenic") {
+    return "🏞️";
+  }
+
+  if (item.category === "shopping") {
+    return "🛍️";
+  }
+
+  return "🍜";
 
 }
 
@@ -2016,8 +2499,6 @@ function openTrip(id) {
 
   placesSearchKeyword = "";
 
-  placesCategoryFilter = "all";
-
   viewingId = null;
 
   viewingType = null;
@@ -2136,45 +2617,45 @@ function renderTrip() {
 
       <button
         class="tab ${
-          currentPage === "hotel"
+          currentPage === "stay"
           ? "active"
           : ""
         }"
         onclick="
-          switchPage('hotel')
+          switchPage('stay')
         ">
 
-        🏨 酒店
+        🏨 住宿交通
 
       </button>
 
 
       <button
         class="tab ${
-          currentPage === "transport"
+          currentPage === "food"
           ? "active"
           : ""
         }"
         onclick="
-          switchPage('transport')
+          switchPage('food')
         ">
 
-        🚄 交通
+        🍜 美食
 
       </button>
 
 
       <button
         class="tab ${
-          currentPage === "places"
+          currentPage === "scenic"
           ? "active"
           : ""
         }"
         onclick="
-          switchPage('places')
+          switchPage('scenic')
         ">
 
-        📍 美食景点
+        🏞️ 景点·购物
 
       </button>
 
@@ -2222,15 +2703,11 @@ function switchPage(page) {
 
   viewingType = null;
 
-  if (
-    page !== "places"
-  ) {
+  placesSearchKeyword = "";
 
-    placesSearchKeyword = "";
+  stayCategoryFilter = "all";
 
-    placesCategoryFilter = "all";
-
-  }
+  scenicCategoryFilter = "all";
 
   renderTrip();
 
@@ -2300,22 +2777,46 @@ function renderPage() {
   }
 
   else if (
-    currentPage === "expense"
+    currentPage === "stay"
   ) {
 
-    renderExpense(
+    renderStay(
       content,
       trip
     );
 
   }
 
-  else {
+  else if (
+    currentPage === "food"
+  ) {
 
-    renderGeneric(
+    renderPlacesByCategory(
       content,
       trip,
-      currentPage
+      "food"
+    );
+
+  }
+
+  else if (
+    currentPage === "scenic"
+  ) {
+
+    renderScenicShopping(
+      content,
+      trip
+    );
+
+  }
+
+  else if (
+    currentPage === "expense"
+  ) {
+
+    renderExpense(
+      content,
+      trip
     );
 
   }
@@ -2458,45 +2959,94 @@ function renderItinerary(
 
 
 /* =========================================================
-   酒店 / 交通 / 美食景点
+   住宿交通（酒店 + 交通 合并）
 ========================================================= */
 
-function renderGeneric(
+function renderStay(
   content,
-  trip,
-  type
+  trip
 ) {
-
-  const titles = {
-
-    hotel:
-      "🏨 酒店",
-
-    transport:
-      "🚄 交通",
-
-    places:
-      "📍 美食 & 景点"
-
-  };
-
 
   let html = `
 
     <div class="section-header">
 
       <h2>
-        ${titles[type]}
+        🏨 住宿交通
       </h2>
 
 
+      <div style="display:flex;gap:7px;">
+
+        <button
+          class="add-button"
+          onclick="
+            openModal('hotel')
+          ">
+
+          ＋ 酒店
+
+        </button>
+
+
+        <button
+          class="add-button"
+          onclick="
+            openModal('transport')
+          ">
+
+          ＋ 交通
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="category-filter">
+
       <button
-        class="add-button"
+        class="category-button ${
+          stayCategoryFilter === "all"
+          ? "active"
+          : ""
+        }"
         onclick="
-          openModal('${type}')
+          setStayCategory('all')
         ">
 
-        ＋ 添加
+        全部
+
+      </button>
+
+
+      <button
+        class="category-button ${
+          stayCategoryFilter === "hotel"
+          ? "active"
+          : ""
+        }"
+        onclick="
+          setStayCategory('hotel')
+        ">
+
+        🏨 酒店
+
+      </button>
+
+
+      <button
+        class="category-button ${
+          stayCategoryFilter === "transport"
+          ? "active"
+          : ""
+        }"
+        onclick="
+          setStayCategory('transport')
+        ">
+
+        🚄 交通
 
       </button>
 
@@ -2505,123 +3055,466 @@ function renderGeneric(
   `;
 
 
+  let entries = [];
+
+
   if (
-    type === "places"
+    stayCategoryFilter === "all" ||
+    stayCategoryFilter === "hotel"
   ) {
+
+    (trip.hotel || [])
+    .forEach(item => {
+
+      entries.push({
+
+        item,
+
+        type:
+          "hotel",
+
+        sortKey:
+          (
+            item.startDate ||
+            item.date ||
+            ""
+          )
+
+      });
+
+    });
+
+  }
+
+
+  if (
+    stayCategoryFilter === "all" ||
+    stayCategoryFilter === "transport"
+  ) {
+
+    (trip.transport || [])
+    .forEach(item => {
+
+      entries.push({
+
+        item,
+
+        type:
+          "transport",
+
+        sortKey:
+          (
+            item.startDate ||
+            item.date ||
+            ""
+          ) +
+          (
+            item.startTime ||
+            item.time ||
+            ""
+          )
+
+      });
+
+    });
+
+  }
+
+
+  entries.sort(
+    (a,b) =>
+      a.sortKey.localeCompare(
+        b.sortKey
+      )
+  );
+
+
+  if (!entries.length) {
 
     html += `
 
-      <div class="search-box">
+      <div class="empty">
 
-        <input
-          id="placesSearch"
-          type="search"
-          placeholder="🔍 搜索美食、景点、地点或备注"
-          value="${escapeHTML(
-            placesSearchKeyword
-          )}"
-          oninput="
-            placesSearchKeyword = this.value;
-            renderPlacesResults();
-          ">
+        ${
+          stayCategoryFilter === "hotel"
+          ?
+          "还没有酒店资料"
+          :
+          stayCategoryFilter === "transport"
+          ?
+          "还没有交通资料"
+          :
+          "还没有住宿或交通资料"
+        }
 
-      </div>
+        <br><br>
 
-
-      <div class="category-filter">
-
-        <button
-          class="category-button ${
-            placesCategoryFilter === "all"
-            ? "active"
-            : ""
-          }"
-          onclick="
-            setPlacesCategory('all')
-          ">
-
-          全部
-
-        </button>
-
-
-        <button
-          class="category-button ${
-            placesCategoryFilter === "food"
-            ? "active"
-            : ""
-          }"
-          onclick="
-            setPlacesCategory('food')
-          ">
-
-          🍜 美食
-
-        </button>
-
-
-        <button
-          class="category-button ${
-            placesCategoryFilter === "scenic"
-            ? "active"
-            : ""
-          }"
-          onclick="
-            setPlacesCategory('scenic')
-          ">
-
-          🏞️ 景点
-
-        </button>
+        按上方按钮添加吧 ✨
 
       </div>
 
     `;
 
+    content.innerHTML = html;
+
+    return;
+
   }
+
+
+  entries.forEach(entry => {
+
+    html += renderItem(
+      entry.item,
+      entry.type,
+      trip
+    );
+
+  });
+
+
+  content.innerHTML = html;
+
+}
+
+
+function setStayCategory(
+  category
+) {
+
+  stayCategoryFilter =
+    category;
+
+  renderStayResults();
+
+}
+
+
+function renderStayResults() {
+
+  const trip =
+    getCurrentTrip();
+
+  if (!trip) return;
+
+
+  const content =
+    document.getElementById(
+      "tripContent"
+    );
+
+  renderStay(
+    content,
+    trip
+  );
+
+}
+
+
+/* =========================================================
+   景点 + 购物（合并页面，结构对齐住宿交通）
+========================================================= */
+
+function renderScenicShopping(
+  content,
+  trip
+) {
+
+  let html = `
+
+    <div class="section-header">
+
+      <h2>
+        🏞️ 景点 · 购物
+      </h2>
+
+
+      <div style="display:flex;gap:7px;">
+
+        <button
+          class="add-button"
+          onclick="
+            openPlacesModal('scenic')
+          ">
+
+          ＋ 景点
+
+        </button>
+
+
+        <button
+          class="add-button"
+          onclick="
+            openPlacesModal('shopping')
+          ">
+
+          ＋ 购物
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="category-filter">
+
+      <button
+        class="category-button ${
+          scenicCategoryFilter === "all"
+          ? "active"
+          : ""
+        }"
+        onclick="
+          setScenicCategory('all')
+        ">
+
+        全部
+
+      </button>
+
+
+      <button
+        class="category-button ${
+          scenicCategoryFilter === "scenic"
+          ? "active"
+          : ""
+        }"
+        onclick="
+          setScenicCategory('scenic')
+        ">
+
+        🏞️ 景点
+
+      </button>
+
+
+      <button
+        class="category-button ${
+          scenicCategoryFilter === "shopping"
+          ? "active"
+          : ""
+        }"
+        onclick="
+          setScenicCategory('shopping')
+        ">
+
+        🛍️ 购物
+
+      </button>
+
+    </div>
+
+  `;
 
 
   let items =
-    [...(trip[type] || [])];
+    (trip.places || [])
+    .filter(
+      item =>
+        (
+          item.category ||
+          "food"
+        ) === "scenic" ||
+        item.category === "shopping"
+    );
 
-
-  /*
-    美食景点分类
-  */
 
   if (
-    type === "places"
+    scenicCategoryFilter !== "all"
   ) {
 
     items =
-      items.filter(item => {
-
-        /*
-          旧资料没有 category
-          自动视为 food
-        */
-
-        const category =
-          item.category ||
-          "food";
-
-
-        return (
-          placesCategoryFilter === "all" ||
-          category === placesCategoryFilter
-        );
-
-      });
+      items.filter(
+        item =>
+          (
+            item.category ||
+            "food"
+          ) === scenicCategoryFilter
+      );
 
   }
 
 
-  /*
-    搜索
-  */
+  items.sort(
+    (a,b) =>
+      (
+        (a.date || "") +
+        (a.time || "")
+      )
+      .localeCompare(
+        (b.date || "") +
+        (b.time || "")
+      )
+  );
+
+
+  if (!items.length) {
+
+    html += `
+
+      <div class="empty">
+
+        ${
+          scenicCategoryFilter === "scenic"
+          ?
+          "还没有景点资料"
+          :
+          scenicCategoryFilter === "shopping"
+          ?
+          "还没有购物资料"
+          :
+          "还没有景点或购物资料"
+        }
+
+        <br><br>
+
+        按上方按钮添加吧 ✨
+
+      </div>
+
+    `;
+
+    content.innerHTML = html;
+
+    return;
+
+  }
+
+
+  items.forEach(item => {
+
+    html += renderItem(
+      item,
+      "places",
+      trip
+    );
+
+  });
+
+
+  content.innerHTML = html;
+
+}
+
+
+function setScenicCategory(
+  category
+) {
+
+  scenicCategoryFilter =
+    category;
+
+  renderScenicResults();
+
+}
+
+
+function renderScenicResults() {
+
+  const trip =
+    getCurrentTrip();
+
+  if (!trip) return;
+
+
+  const content =
+    document.getElementById(
+      "tripContent"
+    );
+
+  renderScenicShopping(
+    content,
+    trip
+  );
+
+}
+
+
+/* =========================================================
+   美食 / 景点（各自独立页面）
+========================================================= */
+
+function renderPlacesByCategory(
+  content,
+  trip,
+  category
+) {
+
+  const titles = {
+
+    food:
+      "🍜 美食",
+
+    scenic:
+      "🏞️ 景点"
+
+  };
+
+
+  placesFormCategory =
+    category;
+
+
+  let html = `
+
+    <div class="section-header">
+
+      <h2>
+        ${titles[category]}
+      </h2>
+
+
+      <button
+        class="add-button"
+        onclick="
+          openPlacesModal('${category}')
+        ">
+
+        ＋ 添加
+
+      </button>
+
+    </div>
+
+
+    <div class="search-box">
+
+      <input
+        id="placesSearch"
+        type="search"
+        placeholder="${
+          category === "scenic"
+          ?
+          "🔍 搜索景点、地点或备注"
+          :
+          "🔍 搜索美食、地点或备注"
+        }"
+        value="${escapeHTML(
+          placesSearchKeyword
+        )}"
+        oninput="
+          placesSearchKeyword = this.value;
+          renderPlacesResults('${category}');
+        ">
+
+    </div>
+
+  `;
+
+
+  let items =
+    (trip.places || [])
+    .filter(
+      item =>
+        (
+          item.category ||
+          "food"
+        ) === category
+    );
+
 
   if (
-    type === "places" &&
     placesSearchKeyword.trim()
   ) {
 
@@ -2641,10 +3534,7 @@ function renderGeneric(
           item.note || "",
           item.member || "",
           item.date || "",
-          item.time || "",
-          item.category === "scenic"
-            ? "景点"
-            : "美食"
+          item.time || ""
 
         ]
         .join(" ")
@@ -2667,29 +3557,19 @@ function renderGeneric(
       <div class="empty">
 
         ${
-          type === "places" &&
           placesSearchKeyword.trim()
           ?
           "找不到符合的资料"
           :
-          type === "places" &&
-          placesCategoryFilter === "food"
-          ?
-          "还没有美食资料"
-          :
-          type === "places" &&
-          placesCategoryFilter === "scenic"
+          category === "scenic"
           ?
           "还没有景点资料"
           :
-          "还没有资料"
+          "还没有美食资料"
         }
 
         ${
-          !(
-            type === "places" &&
-            placesSearchKeyword.trim()
-          )
+          !placesSearchKeyword.trim()
           ?
           `
             <br><br>
@@ -2716,7 +3596,7 @@ function renderGeneric(
 
     html += renderItem(
       item,
-      type,
+      "places",
       trip
     );
 
@@ -2728,23 +3608,9 @@ function renderGeneric(
 }
 
 
-/* =========================================================
-   美食景点分类切换
-========================================================= */
-
-function setPlacesCategory(
+function renderPlacesResults(
   category
 ) {
-
-  placesCategoryFilter =
-    category;
-
-  renderPlacesResults();
-
-}
-
-
-function renderPlacesResults() {
 
   const trip =
     getCurrentTrip();
@@ -2757,10 +3623,10 @@ function renderPlacesResults() {
       "tripContent"
     );
 
-  renderGeneric(
+  renderPlacesByCategory(
     content,
     trip,
-    "places"
+    category
   );
 
 
@@ -4353,47 +5219,6 @@ async function openStoredFile(
   fileId
 ) {
 
-  /*
-    非常重要：
-
-    必须在用户点击「查看」的同步执行阶段，
-    先打开一个空白页面。
-
-    如果等 await getFileById() 完成后
-    才 window.open()，
-
-    iPhone / Safari 很容易把它判断为
-    非用户操作，从而拦截弹窗。
-  */
-
-  let newWindow = null;
-
-  try {
-
-    newWindow =
-      window.open(
-        "",
-        "_blank"
-      );
-
-  }
-  catch(error) {
-
-    console.error(
-      "无法打开新窗口",
-      error
-    );
-
-  }
-
-
-  /*
-    如果 Safari 已经拦截，
-    先不立即报错。
-    后面会尝试备用方式。
-  */
-
-
   try {
 
     const file =
@@ -4404,10 +5229,6 @@ async function openStoredFile(
 
     if (!file) {
 
-      if (newWindow) {
-        newWindow.close();
-      }
-
       alert(
         "找不到这个文件"
       );
@@ -4417,68 +5238,48 @@ async function openStoredFile(
     }
 
 
-    const blob =
-      file.blob instanceof Blob
-      ?
-      file.blob
-      :
-      new Blob(
-        [file.blob],
-        {
-          type:
-            file.type ||
-            "application/octet-stream"
-        }
-      );
-
-
-    const url =
-      URL.createObjectURL(
-        blob
-      );
+    let dataUrl =
+      file.data ||
+      null;
 
 
     /*
-      PDF / 图片 / 浏览器可以直接显示的文件：
-      直接把刚才已经打开的页面导航到 Blob URL。
+      兼容旧资料
+      （改版前用 Blob 存储的文件）
     */
 
-    if (newWindow) {
+    if (
+      !dataUrl &&
+      file.blob
+    ) {
+
+      const blob =
+        file.blob instanceof Blob
+        ?
+        file.blob
+        :
+        new Blob(
+          [file.blob],
+          {
+            type:
+              file.type ||
+              "application/octet-stream"
+          }
+        );
+
 
       try {
 
-        newWindow.location.href =
-          url;
-
-        /*
-          不要马上 revoke。
-          iPhone / Safari 对 Blob URL
-          的读取比较敏感。
-        */
-
-        setTimeout(
-          () => {
-
-            try {
-
-              URL.revokeObjectURL(
-                url
-              );
-
-            }
-            catch(error) {}
-
-          },
-          5 * 60 * 1000
-        );
-
-        return;
+        dataUrl =
+          await readFileAsDataURL(
+            blob
+          );
 
       }
       catch(error) {
 
         console.error(
-          "新窗口打开失败",
+          "读取旧资料失败",
           error
         );
 
@@ -4487,9 +5288,62 @@ async function openStoredFile(
     }
 
 
+    if (!dataUrl) {
+
+      alert(
+        "无法读取这个文件，" +
+        "建议删除后重新上传"
+      );
+
+      return;
+
+    }
+
+
+    const mimeType =
+      file.type || "";
+
+    const isImage =
+      mimeType.startsWith(
+        "image/"
+      );
+
+    const isPdf =
+      mimeType ===
+      "application/pdf";
+
+
     /*
-      如果 window.open 被 Safari 拦截，
-      尝试使用真正的 <a> 下载/打开方式。
+      ★ 图片 / PDF：
+      直接在 App 内弹出预览。
+    */
+
+    if (
+      isImage ||
+      isPdf
+    ) {
+
+      openFilePreview(
+        dataUrl,
+        isImage
+        ?
+        "image"
+        :
+        "pdf",
+        file.name
+      );
+
+      return;
+
+    }
+
+
+    /*
+      其他类型文件
+      （Word / Excel / PPT 等）：
+      浏览器无法内嵌预览，
+      用 <a> 直接打开 /
+      交给系统处理。
     */
 
     const link =
@@ -4497,7 +5351,8 @@ async function openStoredFile(
         "a"
       );
 
-    link.href = url;
+    link.href =
+      dataUrl;
 
     link.target =
       "_blank";
@@ -4505,10 +5360,8 @@ async function openStoredFile(
     link.rel =
       "noopener";
 
-    /*
-      不设置 download，
-      让 PDF / 图片尽可能直接打开。
-    */
+    link.download =
+      file.name || "";
 
     document.body.appendChild(
       link
@@ -4519,23 +5372,6 @@ async function openStoredFile(
     link.remove();
 
 
-    setTimeout(
-      () => {
-
-        try {
-
-          URL.revokeObjectURL(
-            url
-          );
-
-        }
-        catch(error) {}
-
-      },
-      5 * 60 * 1000
-    );
-
-
   }
   catch(error) {
 
@@ -4543,17 +5379,6 @@ async function openStoredFile(
       "打开文件失败",
       error
     );
-
-
-    if (newWindow) {
-
-      try {
-        newWindow.close();
-      }
-      catch(closeError) {}
-
-    }
-
 
     alert(
       "无法打开文件，请再试一次"
@@ -4570,8 +5395,10 @@ async function deleteStoredFile(
 ) {
 
   if (
-    !confirm(
-      "确定要删除这个文件吗？"
+    !(
+      await showConfirm(
+        "确定要删除这个文件吗？"
+      )
     )
   ) {
 
@@ -4945,8 +5772,10 @@ async function deleteTrip(id) {
 
 
   if (
-    !confirm(
-      `确定要删除「${trip.name}」吗？`
+    !(
+      await showConfirm(
+        `确定要删除「${trip.name}」吗？`
+      )
     )
   ) {
 
@@ -5100,6 +5929,27 @@ function openModal(
   document.getElementById(
     "modalOverlay"
   ).classList.add("show");
+
+}
+
+
+/* =========================================================
+   美食 / 景点 Modal（带分类预设）
+========================================================= */
+
+function openPlacesModal(
+  category,
+  id = null
+) {
+
+  placesFormCategory =
+    category ||
+    "food";
+
+  openModal(
+    "places",
+    id
+  );
 
 }
 
@@ -5610,6 +6460,7 @@ function buildForm(
 
     const category =
       item?.category ||
+      placesFormCategory ||
       "food";
 
 
@@ -5646,6 +6497,20 @@ function buildForm(
           }>
 
           🏞️ 景点
+
+        </option>
+
+        <option
+          value="shopping"
+          ${
+            category === "shopping"
+            ?
+            "selected"
+            :
+            ""
+          }>
+
+          🛍️ 购物
 
         </option>
 
@@ -6035,615 +6900,6 @@ function memberSelect(
 
 
 /* =========================================================
-   Save Item
-========================================================= */
-
-function saveItem() {
-
-  const trip =
-    getCurrentTrip();
-
-
-  if (!trip) return;
-
-
-  const type =
-    editingType;
-
-
-  let item;
-
-
-  /* =========================
-     行程
-  ========================= */
-
-  if (
-    type === "itinerary"
-  ) {
-
-    const oldItem =
-      editingId
-      ?
-      trip.itinerary.find(
-        x =>
-          x.id ===
-          editingId
-      )
-      :
-      null;
-
-
-    item = {
-
-      id:
-        editingId ||
-        createId(),
-
-      date:
-        document.getElementById(
-          "fDate"
-        ).value,
-
-      time:
-        document.getElementById(
-          "fTime"
-        ).value,
-
-      endDate:
-        document.getElementById(
-          "fEndDate"
-        ).value,
-
-      endTime:
-        document.getElementById(
-          "fEndTime"
-        ).value,
-
-      icon:
-        document.getElementById(
-          "fIcon"
-        ).value ||
-        getIcon(type),
-
-      name:
-        document.getElementById(
-          "fName"
-        ).value.trim(),
-
-      place:
-        document.getElementById(
-          "fPlace"
-        ).value.trim(),
-
-      member:
-        document.getElementById(
-          "fMember"
-        ).value,
-
-      note:
-        document.getElementById(
-          "fNote"
-        ).value.trim(),
-
-      link:
-        document.getElementById(
-          "fLink"
-        ).value.trim(),
-
-      map:
-        document.getElementById(
-          "fMap"
-        ).value.trim()
-
-    };
-
-
-    if (oldItem) {
-
-      if (
-        oldItem.sourceType
-      ) {
-
-        item.sourceType =
-          oldItem.sourceType;
-
-      }
-
-      if (
-        oldItem.sourceId !==
-        undefined
-      ) {
-
-        item.sourceId =
-          oldItem.sourceId;
-
-      }
-
-    }
-
-  }
-
-
-  /* =========================
-     酒店
-  ========================= */
-
-  else if (
-    type === "hotel"
-  ) {
-
-    item = {
-
-      id:
-        editingId ||
-        createId(),
-
-      name:
-        document.getElementById(
-          "fName"
-        ).value.trim(),
-
-      place:
-        document.getElementById(
-          "fPlace"
-        ).value.trim(),
-
-      startDate:
-        document.getElementById(
-          "fStartDate"
-        ).value,
-
-      endDate:
-        document.getElementById(
-          "fEndDate"
-        ).value,
-
-      member:
-        document.getElementById(
-          "fMember"
-        ).value,
-
-      note:
-        document.getElementById(
-          "fNote"
-        ).value.trim(),
-
-      link:
-        document.getElementById(
-          "fLink"
-        ).value.trim(),
-
-      map:
-        document.getElementById(
-          "fMap"
-        ).value.trim()
-
-    };
-
-  }
-
-
-  /* =========================
-     交通
-  ========================= */
-
-  else if (
-    type === "transport"
-  ) {
-
-    item = {
-
-      id:
-        editingId ||
-        createId(),
-
-      name:
-        document.getElementById(
-          "fName"
-        ).value.trim(),
-
-      place:
-        document.getElementById(
-          "fPlace"
-        ).value.trim(),
-
-      startDate:
-        document.getElementById(
-          "fStartDate"
-        ).value,
-
-      startTime:
-        document.getElementById(
-          "fStartTime"
-        ).value,
-
-      endTime:
-        document.getElementById(
-          "fEndTime"
-        ).value,
-
-      member:
-        document.getElementById(
-          "fMember"
-        ).value,
-
-      note:
-        document.getElementById(
-          "fNote"
-        ).value.trim(),
-
-      map:
-        document.getElementById(
-          "fMap"
-        ).value.trim(),
-
-      link:
-        ""
-
-    };
-
-  }
-
-
-  /* =========================
-     美食景点
-  ========================= */
-
-  else if (
-    type === "places"
-  ) {
-
-    item = {
-
-      id:
-        editingId ||
-        createId(),
-
-      category:
-        document.getElementById(
-          "fCategory"
-        ).value ||
-        "food",
-
-      name:
-        document.getElementById(
-          "fName"
-        ).value.trim(),
-
-      place:
-        document.getElementById(
-          "fPlace"
-        ).value.trim(),
-
-      date:
-        document.getElementById(
-          "fDate"
-        ).value,
-
-      time:
-        document.getElementById(
-          "fTime"
-        ).value,
-
-      member:
-        document.getElementById(
-          "fMember"
-        ).value,
-
-      note:
-        document.getElementById(
-          "fNote"
-        ).value.trim(),
-
-      link:
-        document.getElementById(
-          "fLink"
-        ).value.trim(),
-
-      map:
-        document.getElementById(
-          "fMap"
-        ).value.trim()
-
-    };
-
-  }
-
-
-  /* =========================
-     Expense
-  ========================= */
-
-  else if (
-    type === "expense"
-  ) {
-
-    const participants =
-      [
-        ...document.querySelectorAll(
-          ".expense-participant:checked"
-        )
-      ]
-      .map(
-        input =>
-          input.value
-      );
-
-
-    const oldExpense =
-      editingId
-      ?
-      trip.expense.find(
-        x =>
-          x.id ===
-          editingId
-      )
-      :
-      null;
-
-
-    const currency =
-      (
-        document.getElementById(
-          "fCurrency"
-        ).value.trim() ||
-        "SGD"
-      )
-      .toUpperCase();
-
-
-    item = {
-
-      id:
-        editingId ||
-        createId(),
-
-      itineraryId:
-        editingId
-        ?
-        (
-          oldExpense?.itineraryId ||
-          null
-        )
-        :
-        expenseItineraryId,
-
-      name:
-        document.getElementById(
-          "fName"
-        ).value.trim(),
-
-      amount:
-        Number(
-          document.getElementById(
-            "fAmount"
-          ).value
-        ) || 0,
-
-      currency,
-
-      payer:
-        document.getElementById(
-          "fPayer"
-        ).value,
-
-      participants,
-
-      date:
-        document.getElementById(
-          "fDate"
-        ).value,
-
-      note:
-        document.getElementById(
-          "fNote"
-        ).value.trim()
-
-    };
-
-  }
-
-
-  if (!item.name) {
-
-    alert(
-      "请输入名称"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    type === "expense" &&
-    item.amount <= 0
-  ) {
-
-    alert(
-      "请输入费用金额"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    type === "expense" &&
-    !item.payer
-  ) {
-
-    alert(
-      "请选择谁付款"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    type === "expense" &&
-    !item.participants.length
-  ) {
-
-    alert(
-      "请选择至少一位分摊成员"
-    );
-
-    return;
-
-  }
-
-
-  if (editingId) {
-
-    const index =
-      trip[type].findIndex(
-        x =>
-          x.id ===
-          editingId
-      );
-
-
-    if (index !== -1) {
-
-      trip[type][index] =
-        item;
-
-    }
-
-  }
-
-  else {
-
-    trip[type].push(
-      item
-    );
-
-  }
-
-
-  saveTrips();
-
-  closeModal();
-
-  renderTrip();
-
-}
-
-
-/* =========================================================
-   Delete Item
-========================================================= */
-
-async function deleteItem(
-  type,
-  id
-) {
-
-  const trip =
-    getCurrentTrip();
-
-
-  if (!trip) return;
-
-
-  if (
-    !confirm(
-      "确定要删除这个项目吗？"
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    type === "itinerary"
-  ) {
-
-    try {
-
-      const files =
-        await getFilesForItinerary(
-          id
-        );
-
-
-      for (
-        const file of files
-      ) {
-
-        await deleteFileFromDB(
-          file.id
-        );
-
-      }
-
-    }
-    catch(error) {
-
-      console.error(
-        "清理行程文件失败",
-        error
-      );
-
-    }
-
-  }
-
-
-  trip[type] =
-    trip[type].filter(
-      item =>
-        item.id !== id
-    );
-
-
-  /*
-    删除酒店 / 交通 / 美食景点时，
-    对应的已加入行程也一起解除 source 关系。
-  */
-
-  if (
-    type === "hotel" ||
-    type === "transport" ||
-    type === "places"
-  ) {
-
-    trip.itinerary =
-      trip.itinerary.filter(
-        itineraryItem =>
-          !(
-            itineraryItem.sourceType === type &&
-            String(
-              itineraryItem.sourceId
-            ) ===
-            String(id)
-          )
-      );
-
-  }
-
-
-  saveTrips();
-
-
-  viewingId = null;
-
-  viewingType = null;
-
-
-  renderTrip();
-
-}
-
-
-/* =========================================================
    Close Modal
 ========================================================= */
 
@@ -6678,8 +6934,6 @@ function backHome() {
   viewingType = null;
 
   placesSearchKeyword = "";
-
-  placesCategoryFilter = "all";
 
   renderHome();
 
@@ -8246,8 +8500,10 @@ async function deleteItem(
 
 
   if (
-    !confirm(
-      "确定要删除这个项目吗？"
+    !(
+      await showConfirm(
+        "确定要删除这个项目吗？"
+      )
     )
   ) {
 
@@ -8497,9 +8753,7 @@ async function deleteItem(
   }
 
 
-  saveTrips();
-
-
+  
   viewingId = null;
 
   viewingType = null;
@@ -8508,19 +8762,9 @@ async function deleteItem(
   renderTrip();
 
 }
-
-
-/* =========================================================
-   ★ 第一次加载时，把现有已关联资料同步一次
-   ========================================================= */
-
-syncAllExistingLinks();
-
-saveTrips();
-
-
 </script>
 
 </body>
 
 </html>
+
