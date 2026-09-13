@@ -1122,6 +1122,8 @@ function supabaseHeaders(extra = {}) {
       "Bearer " + SUPABASE_KEY,
     "Content-Type":
       "application/json",
+    "x-share-token":
+      SHARE_TOKEN,
     ...extra
   };
 }
