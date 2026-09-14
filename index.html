@@ -2267,13 +2267,14 @@ function saveTrips() {
     }
 
     if (
-      active &&
-      cloudReady
-    ) {
+  active &&
+  cloudReady
+) {
 
-      cloudSave(active);
+  console.log("DELETE/SAVE TEST", active);
+  cloudSave(active);
 
-    }
+}
 
   }
   catch(e) {
