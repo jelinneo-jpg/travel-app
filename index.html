@@ -1453,7 +1453,7 @@ async function cloudRefresh(){
     if(typeof renderCurrentPage==="function") renderCurrentPage();
     if(typeof render==="function") render();
     setCloudStatus("☁️ 已取得最新资料",true);
-  }catch(e){ console.error("云端同步失败:",e); setCloudStatus("☁️ 同步失败，请检查 Supabase",false); }
+  } catch(e){ console.error("云端同步失败:",e); console.error("错误详细信息:", e?.message, e?.stack); setCloudStatus("☁️ 同步失败，请检查 Supabase",false); }
 }
 function startSharePolling(){
   if(sharePollTimer) clearInterval(sharePollTimer);
