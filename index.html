@@ -545,25 +545,6 @@ button {
   font-size: 14px;
 }
 
-.source-page-search {
-  margin: 0 0 12px;
-}
-
-.source-page-search input {
-  width: 100%;
-  padding: 15px 17px;
-  border-radius: 17px;
-  border: 1px solid #ead9d1;
-  background: white;
-  color: #4d4140;
-  font-size: 15px;
-  box-shadow: 0 5px 16px rgba(120,80,60,.035);
-}
-
-.source-page-search input::placeholder {
-  color: #aaa09c;
-}
-
 
 /* =========================
    日期范围
@@ -3095,20 +3076,6 @@ function renderStay(
 
     </div>
 
-
-    <div class="source-page-search">
-      <input
-        id="staySearch"
-        type="search"
-        placeholder="🔍 搜索酒店、交通、地点或备注"
-        value="${escapeHTML(staySearchKeyword)}"
-        oninput="
-          staySearchKeyword = this.value;
-          renderStayResults();
-        ">
-    </div>
-
-
     <div class="category-filter">
 
       <button
@@ -3224,26 +3191,6 @@ function renderStay(
     });
 
   }
-
-
-  if (staySearchKeyword.trim()) {
-    const keyword = staySearchKeyword.trim().toLowerCase();
-    entries = entries.filter(entry => {
-      const item = entry.item || {};
-      const text = [
-        item.name || "",
-        item.place || "",
-        item.note || "",
-        item.member || "",
-        item.startDate || item.date || "",
-        item.endDate || "",
-        item.startTime || item.time || "",
-        item.endTime || ""
-      ].join(" ").toLowerCase();
-      return text.includes(keyword);
-    });
-  }
-
 
   entries.sort(
     (a,b) =>
@@ -3387,20 +3334,6 @@ function renderScenicShopping(
 
     </div>
 
-
-    <div class="source-page-search">
-      <input
-        id="scenicSearch"
-        type="search"
-        placeholder="🔍 搜索景点、购物、地点或备注"
-        value="${escapeHTML(scenicSearchKeyword)}"
-        oninput="
-          scenicSearchKeyword = this.value;
-          renderScenicResults();
-        ">
-    </div>
-
-
     <div class="category-filter">
 
       <button
@@ -3478,23 +3411,6 @@ function renderScenicShopping(
       );
 
   }
-
-
-  if (scenicSearchKeyword.trim()) {
-    const keyword = scenicSearchKeyword.trim().toLowerCase();
-    items = items.filter(item => {
-      const text = [
-        item.name || "",
-        item.place || "",
-        item.note || "",
-        item.member || "",
-        item.date || "",
-        item.time || ""
-      ].join(" ").toLowerCase();
-      return text.includes(keyword);
-    });
-  }
-
 
   items.sort(
     (a,b) =>
