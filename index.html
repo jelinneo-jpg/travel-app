@@ -1849,7 +1849,7 @@ let trips =
 
 trips.forEach(trip => {
 
-  if (!trip.itinerary) {
+  if (!trip?.itinerary) {
     trip.itinerary = [];
   }
 
@@ -2979,7 +2979,7 @@ function renderItinerary(
 ) {
 
   const items =
-    [...(trip.itinerary || [])]
+    [...(trip?.itinerary || [])]
     .sort(
       (a,b) =>
         (
