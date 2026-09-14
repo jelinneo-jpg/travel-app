@@ -2231,11 +2231,61 @@ async function deleteFileFromDB(id){
 }
 
 function saveTrips() {
-  try { localStorage.setItem("travelTrips", JSON.stringify(trips)); } catch(e) {}
+
   try {
-    const active = trips.find(t => String(t.id) === String(currentTripId));
-    if (active && cloudReady) cloudSave(active);
-  } catch(e) { console.error("云端保存:", e); }
+
+    localStorage.setItem(
+      "travelTrips",
+      JSON.stringify(trips)
+    );
+
+  } catch(e) {}
+
+  try {
+
+    let active =
+      trips.find(
+        t =>
+          String(t.id) ===
+          String(currentTripId)
+      );
+
+    /*
+      如果 currentTripId 暂时没有对应到 Trip，
+      就使用目前唯一的共享 Trip。
+    */
+    if (
+      !active &&
+      Array.isArray(trips) &&
+      trips.length === 1
+    ) {
+
+      active = trips[0];
+
+      currentTripId =
+        active.id;
+
+    }
+
+    if (
+      active &&
+      cloudReady
+    ) {
+
+      cloudSave(active);
+
+    }
+
+  }
+  catch(e) {
+
+    console.error(
+      "云端保存:",
+      e
+    );
+
+  }
+
 }
 
 /* =========================================================
