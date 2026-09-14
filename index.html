@@ -1124,86 +1124,12 @@ textarea {
 
 }
 
-
-/* ===== 全站密码锁：参考「刘太厨房」的网页内密码页面 ===== */
-body.password-locked .app {
-  display: none !important;
-}
-#passwordGate {
-  position: fixed;
-  inset: 0;
-  z-index: 999999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: #fff9f5;
-  box-sizing: border-box;
-}
-.password-gate-box {
-  width: min(420px, 100%);
-  text-align: center;
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 34px 24px 30px;
-  box-shadow: 0 12px 40px rgba(0,0,0,.10);
-}
-.password-gate-icon { font-size: 46px; margin-bottom: 8px; }
-.password-gate-title { font-size: 25px; font-weight: 800; color: #5f514c; }
-.password-gate-text { margin: 10px 0 18px; color: #8a7b74; line-height: 1.6; }
-.password-gate-form { display: flex; flex-direction: column; gap: 12px; }
-.password-gate-input {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid #eadbd3;
-  border-radius: 14px;
-  outline: none;
-  background: #fffaf7;
-  color: #4d4140;
-  text-align: center;
-  font-size: 16px;
-}
-.password-gate-input:focus { border-color: #efa37c; box-shadow: 0 0 0 3px rgba(239,163,124,.15); }
-.password-gate-button {
-  border: 0;
-  border-radius: 14px;
-  padding: 14px 16px;
-  background: #efa37c;
-  color: #fff;
-  font-weight: 800;
-  font-size: 16px;
-}
-.password-gate-button:active { transform: scale(.99); }
-.password-gate-error { min-height: 22px; margin-top: 14px; color: #c75b4b; font-weight: 700; }
-body.password-unlocked #passwordGate { display: none !important; }
-
 </style>
 
 </head>
 
 
-<body class="password-locked">
-
-<div id="passwordGate" aria-hidden="false">
-  <div class="password-gate-box">
-    <div class="password-gate-icon">🔒</div>
-    <div class="password-gate-title">我们的旅行 ✈️</div>
-    <div class="password-gate-text">请输入密码才能进入 ❤️</div>
-    <form id="passwordGateForm" class="password-gate-form" autocomplete="off">
-      <input
-        id="passwordGateInput"
-        class="password-gate-input"
-        type="password"
-        placeholder="请输入密码"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-      >
-      <button id="passwordGateButton" class="password-gate-button" type="submit">进入旅行 ❤️</button>
-    </form>
-    <div id="passwordGateError" class="password-gate-error" aria-live="polite"></div>
-  </div>
-</div>
+<body>
 
 <div class="app">
 
@@ -1443,7 +1369,7 @@ async function cloudRefresh(){
     trip.shareToken=FIXED_SHARE_TOKEN; trips=[trip]; currentTripId=trip.id; lastCloudUpdatedAt=row.updated_at || null;
     try{localStorage.setItem("travelTrips",JSON.stringify(trips));}catch(e){}
     if(typeof renderHome==="function") renderHome();
-    if(typeof renderItinerary==="function") renderItinerary();
+    if(typeof renderTrip==="function") renderTrip();
     if(typeof renderCurrentPage==="function") renderCurrentPage();
     if(typeof render==="function") render();
     setCloudStatus("☁️ 已取得最新资料",true);
@@ -1469,26 +1395,9 @@ function addShareButton(){
 }
 async function bootShare(){
   const SHARED_PASSWORD="travel2026";
-  const form=document.getElementById("passwordGateForm");
-  const input=document.getElementById("passwordGateInput");
-  const errorBox=document.getElementById("passwordGateError");
-  if(!form || !input) return;
-
-  const unlock=async()=>{
-    const pass=input.value;
-    if(pass!==SHARED_PASSWORD){
-      if(errorBox) errorBox.textContent="密码不正确，请重新输入。";
-      input.value="";
-      input.focus();
-      document.body.classList.remove("password-unlocked");
-      document.body.classList.add("password-locked");
-      return;
-    }
-
-    document.body.classList.remove("password-locked");
-    document.body.classList.add("password-unlocked");
-    if(errorBox) errorBox.textContent="";
-    currentShareToken=FIXED_SHARE_TOKEN;
+  const pass=prompt("请输入旅行共享密码");
+  if(pass!==SHARED_PASSWORD){alert("密码不正确。");return;}
+  currentShareToken=FIXED_SHARE_TOKEN;
   setCloudStatus("☁️ 正在连接共享资料…",false);
   try{
     const ok=await cloudLoad();
@@ -1498,17 +1407,10 @@ async function bootShare(){
     }
   }catch(e){console.error("云端初始化:",e);}
   if(typeof renderHome==="function") renderHome();
-  if(typeof renderItinerary==="function") renderItinerary();
+  if(typeof renderTrip==="function") renderTrip();
   if(typeof renderCurrentPage==="function") renderCurrentPage();
   if(typeof render==="function") render();
   addShareButton(); startSharePolling();
-  };
-
-  form.onsubmit=(e)=>{
-    e.preventDefault();
-    unlock();
-  };
-  setTimeout(()=>input.focus(),100);
 }
 window.addEventListener("load",()=>setTimeout(()=>{ addShareButton(); bootShare(); },300));
 
@@ -1966,6 +1868,9 @@ trips.forEach(trip => {
   这样旧资料以后也会带 category。
 */
 
+// 必须在第一次 saveTrips() 之前初始化，避免 let 的 TDZ 错误
+let currentTripId = null;
+
 saveTrips();
 
 
@@ -1981,8 +1886,6 @@ function ensureLocalShareTokens(){
     }
   }catch(e){}
 }
-
-let currentTripId = null;
 
 let currentPage =
   "itinerary";
