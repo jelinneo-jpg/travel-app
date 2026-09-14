@@ -1841,6 +1841,7 @@ let trips =
     )
   ) || DEFAULT_TRIPS;
 
+  let currentTripId = null;
 
 /* =========================================================
    数据兼容
@@ -2228,8 +2229,6 @@ async function deleteFileFromDB(id){
     req.onsuccess=()=>resolve(); req.onerror=()=>reject(req.error);
   });
 }
-
-let currentTripId = null;
 
 function saveTrips() {
   try { localStorage.setItem("travelTrips", JSON.stringify(trips)); } catch(e) {}
