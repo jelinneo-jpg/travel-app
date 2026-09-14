@@ -474,77 +474,6 @@ button {
   width: 100%;
 }
 
-/* =========================
-   酒店 / 交通 / 景点 / 购物
-   卡片风格（参考美食页面）
-========================= */
-.source-card {
-  margin: 10px 0 0;
-  padding: 20px 18px;
-  border-radius: 22px;
-  box-shadow: 0 8px 24px rgba(120,80,60,.055);
-}
-
-.source-card .item-name {
-  font-size: 19px;
-  line-height: 1.45;
-}
-
-.source-card .item-info {
-  margin-top: 10px;
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-.source-card .source-location {
-  color: #8c7d79;
-  font-size: 14px;
-}
-
-.source-card .source-member {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 9px;
-  padding: 6px 11px;
-  border-radius: 999px;
-  background: #fff3ec;
-  color: #8c7d79;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.source-card .date-range,
-.source-card .itinerary-time {
-  margin-top: 10px;
-  color: #df8058;
-  font-size: 17px;
-  line-height: 1.35;
-  font-weight: 800;
-}
-
-.source-card .category-badge {
-  margin-top: 9px;
-}
-
-.source-card-detail {
-  margin-top: 13px;
-  color: #b19f98;
-  font-size: 12px;
-}
-
-.source-action-area {
-  margin: 8px 4px 14px;
-  padding: 0;
-}
-
-.source-action-area button {
-  width: 100%;
-  min-height: 44px;
-  border-radius: 14px;
-  font-size: 14px;
-}
-
 
 /* =========================
    日期范围
@@ -1195,12 +1124,86 @@ textarea {
 
 }
 
+
+/* ===== 全站密码锁：参考「刘太厨房」的网页内密码页面 ===== */
+body.password-locked .app {
+  display: none !important;
+}
+#passwordGate {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #fff9f5;
+  box-sizing: border-box;
+}
+.password-gate-box {
+  width: min(420px, 100%);
+  text-align: center;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 34px 24px 30px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.10);
+}
+.password-gate-icon { font-size: 46px; margin-bottom: 8px; }
+.password-gate-title { font-size: 25px; font-weight: 800; color: #5f514c; }
+.password-gate-text { margin: 10px 0 18px; color: #8a7b74; line-height: 1.6; }
+.password-gate-form { display: flex; flex-direction: column; gap: 12px; }
+.password-gate-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #eadbd3;
+  border-radius: 14px;
+  outline: none;
+  background: #fffaf7;
+  color: #4d4140;
+  text-align: center;
+  font-size: 16px;
+}
+.password-gate-input:focus { border-color: #efa37c; box-shadow: 0 0 0 3px rgba(239,163,124,.15); }
+.password-gate-button {
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #efa37c;
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+}
+.password-gate-button:active { transform: scale(.99); }
+.password-gate-error { min-height: 22px; margin-top: 14px; color: #c75b4b; font-weight: 700; }
+body.password-unlocked #passwordGate { display: none !important; }
+
 </style>
 
 </head>
 
 
-<body>
+<body class="password-locked">
+
+<div id="passwordGate" aria-hidden="false">
+  <div class="password-gate-box">
+    <div class="password-gate-icon">🔒</div>
+    <div class="password-gate-title">我们的旅行 ✈️</div>
+    <div class="password-gate-text">请输入密码才能进入 ❤️</div>
+    <form id="passwordGateForm" class="password-gate-form" autocomplete="off">
+      <input
+        id="passwordGateInput"
+        class="password-gate-input"
+        type="password"
+        placeholder="请输入密码"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+      >
+      <button id="passwordGateButton" class="password-gate-button" type="submit">进入旅行 ❤️</button>
+    </form>
+    <div id="passwordGateError" class="password-gate-error" aria-live="polite"></div>
+  </div>
+</div>
 
 <div class="app">
 
@@ -1466,9 +1469,26 @@ function addShareButton(){
 }
 async function bootShare(){
   const SHARED_PASSWORD="666666";
-  const pass=prompt("请输入旅行共享密码");
-  if(pass!==SHARED_PASSWORD){alert("密码不正确。");return;}
-  currentShareToken=FIXED_SHARE_TOKEN;
+  const form=document.getElementById("passwordGateForm");
+  const input=document.getElementById("passwordGateInput");
+  const errorBox=document.getElementById("passwordGateError");
+  if(!form || !input) return;
+
+  const unlock=async()=>{
+    const pass=input.value;
+    if(pass!==SHARED_PASSWORD){
+      if(errorBox) errorBox.textContent="密码不正确，请重新输入。";
+      input.value="";
+      input.focus();
+      document.body.classList.remove("password-unlocked");
+      document.body.classList.add("password-locked");
+      return;
+    }
+
+    document.body.classList.remove("password-locked");
+    document.body.classList.add("password-unlocked");
+    if(errorBox) errorBox.textContent="";
+    currentShareToken=FIXED_SHARE_TOKEN;
   setCloudStatus("☁️ 正在连接共享资料…",false);
   try{
     const ok=await cloudLoad();
@@ -1482,6 +1502,13 @@ async function bootShare(){
   if(typeof renderCurrentPage==="function") renderCurrentPage();
   if(typeof render==="function") render();
   addShareButton(); startSharePolling();
+  };
+
+  form.onsubmit=(e)=>{
+    e.preventDefault();
+    unlock();
+  };
+  setTimeout(()=>input.focus(),100);
 }
 window.addEventListener("load",()=>setTimeout(()=>{ addShareButton(); bootShare(); },300));
 
@@ -1970,15 +1997,12 @@ let viewingId = null;
 
 let viewingType = null;
 
-let placesSearchKeyword = "";
 
 let placesFormCategory = "food";
 
 let stayCategoryFilter = "all";
-let staySearchKeyword = "";
 
 let scenicCategoryFilter = "all";
-let scenicSearchKeyword = "";
 
 
 /* =========================================================
@@ -2570,8 +2594,6 @@ function openTrip(id) {
   currentPage =
     "itinerary";
 
-  placesSearchKeyword = "";
-
   viewingId = null;
 
   viewingType = null;
@@ -2775,8 +2797,6 @@ function switchPage(page) {
   viewingId = null;
 
   viewingType = null;
-
-  placesSearchKeyword = "";
 
   stayCategoryFilter = "all";
 
@@ -3076,6 +3096,7 @@ function renderStay(
 
     </div>
 
+
     <div class="category-filter">
 
       <button
@@ -3192,6 +3213,7 @@ function renderStay(
 
   }
 
+
   entries.sort(
     (a,b) =>
       a.sortKey.localeCompare(
@@ -3278,14 +3300,7 @@ function renderStayResults() {
     content,
     trip
   );
-  
-  const input = document.getElementById("staySearch");
-  if (input) {
-    input.focus();
-    try {
-      input.setSelectionRange(input.value.length, input.value.length);
-    } catch (error) {}
-  }
+
 }
 
 
@@ -3333,6 +3348,7 @@ function renderScenicShopping(
       </div>
 
     </div>
+
 
     <div class="category-filter">
 
@@ -3411,6 +3427,7 @@ function renderScenicShopping(
       );
 
   }
+
 
   items.sort(
     (a,b) =>
@@ -3503,14 +3520,7 @@ function renderScenicResults() {
     content,
     trip
   );
-  
-  const input = document.getElementById("scenicSearch");
-  if (input) {
-    input.focus();
-    try {
-      input.setSelectionRange(input.value.length, input.value.length);
-    } catch (error) {}
-  }
+
 }
 
 
@@ -3559,30 +3569,6 @@ function renderPlacesByCategory(
       </button>
 
     </div>
-
-
-    <div class="search-box">
-
-      <input
-        id="placesSearch"
-        type="search"
-        placeholder="${
-          category === "scenic"
-          ?
-          "🔍 搜索景点、地点或备注"
-          :
-          "🔍 搜索美食、地点或备注"
-        }"
-        value="${escapeHTML(
-          placesSearchKeyword
-        )}"
-        oninput="
-          placesSearchKeyword = this.value;
-          renderPlacesResults('${category}');
-        ">
-
-    </div>
-
   `;
 
 
@@ -3596,75 +3582,22 @@ function renderPlacesByCategory(
         ) === category
     );
 
-
-  if (
-    placesSearchKeyword.trim()
-  ) {
-
-    const keyword =
-      placesSearchKeyword
-        .trim()
-        .toLowerCase();
-
-
-    items =
-      items.filter(item => {
-
-        const text = [
-
-          item.name || "",
-          item.place || "",
-          item.note || "",
-          item.member || "",
-          item.date || "",
-          item.time || ""
-
-        ]
-        .join(" ")
-        .toLowerCase();
-
-
-        return text.includes(
-          keyword
-        );
-
-      });
-
-  }
-
-
   if (!items.length) {
 
     html += `
 
       <div class="empty">
-
         ${
-          placesSearchKeyword.trim()
-          ?
-          "找不到符合的资料"
-          :
           category === "scenic"
-          ?
-          "还没有景点资料"
-          :
-          "还没有美食资料"
+          ? "还没有景点资料"
+          : "还没有美食资料"
         }
 
-        ${
-          !placesSearchKeyword.trim()
-          ?
-          `
-            <br><br>
+        <br><br>
 
-            按「＋ 添加」
-            开始吧 ✨
-          `
-          :
-          ""
-        }
-
-      </div>
+        按「＋ 添加」
+        开始吧 ✨
+</div>
 
     `;
 
@@ -3690,51 +3623,6 @@ function renderPlacesByCategory(
 
 }
 
-
-function renderPlacesResults(
-  category
-) {
-
-  const trip =
-    getCurrentTrip();
-
-  if (!trip) return;
-
-
-  const content =
-    document.getElementById(
-      "tripContent"
-    );
-
-  renderPlacesByCategory(
-    content,
-    trip,
-    category
-  );
-
-
-  const input =
-    document.getElementById(
-      "placesSearch"
-    );
-
-  if (input) {
-
-    input.focus();
-
-    try {
-
-      input.setSelectionRange(
-        input.value.length,
-        input.value.length
-      );
-
-    }
-    catch(error) {}
-
-  }
-
-}
 
 
 /* =========================================================
@@ -4976,7 +4864,7 @@ function renderItem(
   return `
 
     <div
-      class="item clickable source-card"
+      class="item clickable"
       onclick="
         openItemView(
           '${type}',
@@ -5010,14 +4898,33 @@ function renderItem(
 
       <div class="item-info">
 
-        ${item.place ? `
-          <div class="source-location">📍 ${escapeHTML(item.place)}</div>
-        ` : ""}
+        ${
+          item.place
+          ?
+          `
+            📍
+            ${escapeHTML(
+              item.place
+            )}
+          `
+          :
+          ""
+        }
 
 
-        ${item.member ? `
-          <div class="source-member">👤 ${escapeHTML(item.member)}</div>
-        ` : ""}
+        ${
+          item.member
+          ?
+          `
+            <br>
+            👤
+            ${escapeHTML(
+              item.member
+            )}
+          `
+          :
+          ""
+        }
 
 
         ${
@@ -5049,7 +4956,16 @@ function renderItem(
       </div>
 
 
-      <div class="source-card-detail">点击查看详情 →</div>
+      <div
+        style="
+          margin-top:10px;
+          color:#b19f98;
+          font-size:11px;
+        ">
+
+        点击查看详情 →
+
+      </div>
 
     </div>
 
@@ -6961,8 +6877,6 @@ function backHome() {
   viewingId = null;
 
   viewingType = null;
-
-  placesSearchKeyword = "";
 
   renderHome();
 
