@@ -1450,7 +1450,6 @@ async function cloudRefresh(){
     trip.shareToken=FIXED_SHARE_TOKEN; trips=[trip]; currentTripId=trip.id; lastCloudUpdatedAt=row.updated_at || null;
     try{localStorage.setItem("travelTrips",JSON.stringify(trips));}catch(e){}
     if(typeof renderHome==="function") renderHome();
-    if(typeof renderItinerary==="function") renderItinerary();
     if(typeof renderCurrentPage==="function") renderCurrentPage();
     if(typeof render==="function") render();
     setCloudStatus("☁️ 已取得最新资料",true);
