@@ -1440,10 +1440,11 @@ async function cloudLoad(){
 }
 
 async function cloudRefresh(){
-  if(!currentShareToken || !cloudReady || cloudWriteInProgress) return;
+  if(!currentShareToken || cloudWriteInProgress) return;
   try{
     const rows=await cloudFetch("/travel_trips?select=trip_id,share_token,data,updated_at&trip_id=eq."+encodeURIComponent(SHARED_TRIP_ID),{method:"GET"},FIXED_SHARE_TOKEN);
     if(!rows||!rows.length) return;
+    cloudReady = true;
     const row=rows[0];
     if(lastCloudUpdatedAt && String(row.updated_at)===String(lastCloudUpdatedAt)) return;
     const trip=row.data; if(!trip) return;
@@ -5600,7 +5601,7 @@ function openTripModal(
    Save Trip
 ========================================================= */
 
-function saveTrip() {
+async function saveTrip() {
 
   const name =
     document.getElementById(
@@ -5727,7 +5728,20 @@ function saveTrip() {
   }
 
 
+  // 先保存到本机。
   saveTrips();
+
+  // 用户主动按「保存」时，即使云端目前是空的，也允许建立 shared-trip。
+  // 这和启动时自动回填不同：只有明确的用户保存动作才会写入 Supabase。
+  const activeTrip = trips.find(t => String(t.id) === String(currentTripId)) || trips[trips.length - 1];
+  if (activeTrip) {
+    currentTripId = activeTrip.id;
+    setCloudStatus("☁️ 正在保存…", false);
+    const savedToCloud = await cloudSave(activeTrip);
+    if (!savedToCloud) {
+      alert("旅行已保存在这台设备，但 Supabase 同步失败。请先不要继续大量输入资料。\n\n请检查 Supabase RLS / 网络连接后再试。");
+    }
+  }
 
   closeModal();
 
@@ -5808,9 +5822,89 @@ async function deleteTrip(id) {
     );
 
 
-  saveTrips();
+  try {
+    localStorage.setItem(
+      "travelTrips",
+      JSON.stringify(trips)
+    );
+  } catch(e) {}
 
-  currentTripId = null;
+
+  if (!trips.length) {
+
+    try {
+
+      setCloudStatus(
+        "☁️ 正在同步删除…",
+        false
+      );
+
+      await cloudFetch(
+        "/travel_trips?trip_id=eq." +
+        encodeURIComponent(
+          SHARED_TRIP_ID
+        ),
+        {
+          method: "DELETE",
+          headers: {
+            "Prefer":
+              "return=minimal"
+          }
+        },
+        FIXED_SHARE_TOKEN
+      );
+
+      lastCloudUpdatedAt = null;
+      cloudReady = false;
+
+      setCloudStatus(
+        "☁️ 已同步删除",
+        true
+      );
+
+    }
+    catch(e) {
+
+      console.error(
+        "删除云端旅行失败:",
+        e
+      );
+
+      setCloudStatus(
+        "☁️ 云端删除失败",
+        false
+      );
+
+      alert(
+        "本机旅行已删除，但 Supabase 删除失败。请检查网络或 Supabase 权限。"
+      );
+
+    }
+
+  }
+  else {
+
+    currentTripId =
+      trips[0].id;
+
+    const saved =
+      await cloudSave(
+        trips[0]
+      );
+
+    if (!saved) {
+
+      alert(
+        "删除已保存在本机，但 Supabase 同步失败。"
+      );
+
+    }
+
+  }
+
+
+  currentTripId =
+    trips[0]?.id ?? null;
 
   renderHome();
 
