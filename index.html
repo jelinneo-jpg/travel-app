@@ -1734,100 +1734,7 @@ function closeFilePreview() {
    默认 Trip
 ========================================================= */
 
-const DEFAULT_TRIPS = [
-
-  {
-
-    id: 1,
-
-    name:
-      "🇭🇰 香港 → 广州 → 成都 → 三江",
-
-    startDate:
-      "2026-11-06",
-
-    endDate:
-      "2026-11-15",
-
-    members: [
-      "Lynn",
-      "Vincent",
-      "Esther",
-      "Tong"
-    ],
-
-    itinerary: [
-
-      {
-        id: 101,
-        date: "2026-11-06",
-        time: "10:00",
-        endTime: "",
-        endDate: "",
-        icon: "✈️",
-        name: "新加坡 → 香港",
-        place: "香港机场",
-        member: "Lynn",
-        note: "抵达后前往酒店",
-        link: "",
-        map: ""
-      },
-
-      {
-        id: 102,
-        date: "2026-11-06",
-        time: "16:00",
-        endTime: "",
-        endDate: "",
-        icon: "🏨",
-        name: "酒店 Check-in",
-        place: "九龙",
-        member: "Vincent",
-        note: "",
-        link: "",
-        map: ""
-      },
-
-      {
-        id: 103,
-        date: "2026-11-07",
-        time: "19:00",
-        endTime: "",
-        endDate: "",
-        icon: "🍜",
-        name: "晚餐",
-        place: "尖沙咀",
-        member: "Esther",
-        note: "",
-        link: "",
-        map: ""
-      },
-
-      {
-        id: 104,
-        date: "2026-11-08",
-        time: "12:30",
-        endTime: "13:30",
-        endDate: "",
-        icon: "🚄",
-        name: "香港 → 广州",
-        place: "香港西九龙 → 广州南",
-        member: "Tong",
-        note: "高铁",
-        link: "",
-        map: ""
-      }
-
-    ],
-
-    hotel: [],
-    transport: [],
-    places: [],
-    expense: []
-
-  }
-
-];
+const DEFAULT_TRIPS = [];
 
 
 /* =========================================================
@@ -1839,7 +1746,7 @@ let trips =
     localStorage.getItem(
       "travelTrips"
     )
-  ) || DEFAULT_TRIPS;
+  ) || [];
 
   let currentTripId = null;
 
