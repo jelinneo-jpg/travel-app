@@ -1479,8 +1479,9 @@ async function bootShare(){
   try{
     const ok=await cloudLoad();
     if(!ok){
-      const localTrip=Array.isArray(trips)?trips[0]:null;
-      if(localTrip) await cloudSave(localTrip);
+      // 安全保护：云端找不到资料时，绝对不要自动用本机/默认资料覆盖 Supabase。
+      cloudReady=false;
+      setCloudStatus("☁️ 云端没有找到共享资料（未自动覆盖）",false);
     }
   }catch(e){ console.error("云端初始化:",e); }
 
@@ -2483,6 +2484,78 @@ function getPlaceIcon(
 
 
 /* =========================================================
+   手动备份：导出 / 导入
+========================================================= */
+
+function exportTravelBackup(){
+  try{
+    const payload={
+      app:"我们的旅行",
+      backupVersion:1,
+      exportedAt:new Date().toISOString(),
+      trips:Array.isArray(trips)?trips:[]
+    };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    const d=new Date();
+    const pad=n=>String(n).padStart(2,"0");
+    const stamp=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"_"+pad(d.getHours())+pad(d.getMinutes());
+    a.href=url;
+    a.download="travel_backup_"+stamp+".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    setCloudStatus("💾 备份文件已导出",true);
+  }catch(e){
+    console.error("导出备份失败:",e);
+    alert("导出失败，请再试一次。");
+  }
+}
+
+function chooseTravelBackup(){
+  const input=document.getElementById("travelBackupInput");
+  if(input){ input.value=""; input.click(); }
+}
+
+async function importTravelBackupFile(input){
+  const file=input && input.files ? input.files[0] : null;
+  if(!file) return;
+  try{
+    const text=await file.text();
+    const parsed=JSON.parse(text);
+    const importedTrips=Array.isArray(parsed) ? parsed : parsed && parsed.trips;
+    if(!Array.isArray(importedTrips) || !importedTrips.length){
+      throw new Error("备份文件没有旅行资料");
+    }
+    const ok=await showConfirm("导入会用备份文件取代目前 App 内的旅行资料。确定要继续吗？");
+    if(!ok) return;
+
+    trips=JSON.parse(JSON.stringify(importedTrips));
+    currentTripId=trips[0]?.id ?? null;
+    ensureLocalShareTokens();
+    localStorage.setItem("travelTrips",JSON.stringify(trips));
+
+    // 只有用户明确执行「导入」时，才把恢复后的资料写回云端。
+    if(trips[0]){
+      const saved=await cloudSave(trips[0]);
+      if(!saved){
+        setCloudStatus("💾 已导入本机；云端恢复失败",false);
+      }else{
+        setCloudStatus("☁️ 备份已恢复并同步",true);
+      }
+    }
+    renderHome();
+  }catch(e){
+    console.error("导入备份失败:",e);
+    alert("这个备份文件无法读取，请选择由旅行 App 导出的 JSON 备份文件。");
+  }finally{
+    if(input) input.value="";
+  }
+}
+
+/* =========================================================
    首页
 ========================================================= */
 
@@ -2503,13 +2576,16 @@ function renderHome() {
           🧳 我的 Trips
         </div>
 
-        <button
-          class="add-trip-button"
-          onclick="openTripModal()">
-
-          ＋ 新增 Trip
-
-        </button>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;">
+          <button class="small-action" onclick="exportTravelBackup()">📤 导出备份</button>
+          <button class="small-action" onclick="chooseTravelBackup()">📥 导入备份</button>
+          <input id="travelBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="importTravelBackupFile(this)">
+          <button
+            class="add-trip-button"
+            onclick="openTripModal()">
+            ＋ 新增 Trip
+          </button>
+        </div>
 
       </div>
 
