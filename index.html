@@ -1208,6 +1208,49 @@ body.password-locked .app {
   font-size: 13px;
 }
 
+
+/* ===== 资料备份：参考「刘太厨房」按钮样式 ===== */
+.travel-backup-card{
+  margin: 12px 16px 18px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #f0ded5;
+  border-radius: 20px;
+  box-shadow: 0 7px 22px rgba(120,80,60,.06);
+}
+.travel-backup-title{
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 800;
+}
+.travel-backup-note{
+  background: #fff0e7;
+  color: #8a5f50;
+  padding: 13px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.travel-backup-button{
+  width: 100%;
+  border: 0;
+  background: #efa37c;
+  color: #fff;
+  padding: 13px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 9px;
+}
+.travel-backup-time{
+  margin-top: 12px;
+  text-align: center;
+  color: #968783;
+  font-size: 12px;
+}
+
 </style>
 
 </head>
@@ -2432,11 +2475,58 @@ function exportTravelBackup(){
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
+    localStorage.setItem("travelLastBackupExportAt", new Date().toISOString());
+    updateTravelBackupTime();
     setCloudStatus("💾 备份文件已导出",true);
   }catch(e){
     console.error("导出备份失败:",e);
     alert("导出失败，请再试一次。");
   }
+}
+
+
+function formatTravelBackupTime(value){
+  if(!value) return "还没有导出过备份";
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime())) return "还没有导出过备份";
+  const pad=n=>String(n).padStart(2,"0");
+  return d.getFullYear()+"/"+pad(d.getMonth()+1)+"/"+pad(d.getDate())+
+    " "+pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());
+}
+
+function updateTravelBackupTime(){
+  const el=document.getElementById("travelLastBackupTime");
+  if(!el) return;
+  const value=localStorage.getItem("travelLastBackupExportAt");
+  el.textContent="上次导出备份："+formatTravelBackupTime(value);
+}
+
+function travelBackupPanelHTML(){
+  return `
+    <div style="margin:0 16px 14px;">
+      <button class="small-action" style="font-weight:700;" onclick="openTravelBackupModal()">💾 资料备份</button>
+    </div>
+    <input id="travelBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="importTravelBackupFile(this)">
+  `;
+}
+
+function openTravelBackupModal(){
+  const value=localStorage.getItem("travelLastBackupExportAt");
+  document.getElementById("modalTitle").textContent="💾 资料备份";
+  document.getElementById("formArea").innerHTML=`
+    <div class="travel-backup-note">
+      📤「导出资料」会把目前旅行资料保存成 JSON 备份文件。<br><br>
+      📥「导入 / 恢复资料」会用你选择的备份文件恢复旅行资料，导入前会再次要求确认。
+    </div>
+    <button type="button" class="travel-backup-button" onclick="exportTravelBackup()">📤 导出资料</button>
+    <button type="button" class="travel-backup-button" onclick="chooseTravelBackup()">📂 导入 / 恢复资料</button>
+    <div class="travel-backup-time" id="travelLastBackupTime">
+      上次导出备份：${formatTravelBackupTime(value)}
+    </div>
+  `;
+  const saveButton=document.getElementById("saveButton");
+  if(saveButton) saveButton.style.display="none";
+  document.getElementById("modalOverlay").classList.add("show");
 }
 
 function chooseTravelBackup(){
@@ -2502,9 +2592,6 @@ function renderHome() {
         </div>
 
         <div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;">
-          <button class="small-action" onclick="exportTravelBackup()">📤 导出备份</button>
-          <button class="small-action" onclick="chooseTravelBackup()">📥 导入备份</button>
-          <input id="travelBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="importTravelBackupFile(this)">
           <button
             class="add-trip-button"
             onclick="openTripModal()">
@@ -2513,6 +2600,8 @@ function renderHome() {
         </div>
 
       </div>
+
+      ${travelBackupPanelHTML()}
 
   `;
 
@@ -6996,6 +7085,9 @@ function memberSelect(
 ========================================================= */
 
 function closeModal() {
+  const backupSaveButton=document.getElementById("saveButton");
+  if(backupSaveButton) backupSaveButton.style.display="";
+
 
   document.getElementById(
     "modalOverlay"
