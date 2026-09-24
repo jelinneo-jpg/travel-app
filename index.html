@@ -14,8 +14,8 @@
   name="theme-color"
   content="#f3a77f">
 
-<link rel="icon" type="image/png" href="travel-icon.PNG">
-<link rel="apple-touch-icon" href="travel-icon.PNG">
+<link rel="icon" type="image/png" href="travel-icon.png">
+<link rel="apple-touch-icon" href="travel-icon.png">
 <meta name="apple-mobile-web-app-title" content="旅行攻略">
 <meta name="application-name" content="旅行攻略">
 
@@ -1152,18 +1152,21 @@ body.password-locked .app {
   background: #fff7f3;
 }
 .password-card {
-  width: min(360px, 100%);
+  width: 100%;
+  max-width: 430px;
+  min-height: calc(100vh - 70px);
   text-align: center;
   background: #fff;
-  border-radius: 24px;
-  padding: 34px 26px 30px;
+  border-radius: 32px;
+  padding: 70px 34px 42px;
   box-shadow: 0 10px 35px rgba(120,80,60,.10);
   border: 1px solid #f4e6df;
 }
 .password-login-photo {
   display: block;
-  width: 150px;
-  height: 150px;
+  width: min(300px, 100%);
+  height: auto;
+  aspect-ratio: 1 / 1;
   margin: 0 auto 16px;
   object-fit: cover;
   border-radius: 22px;
