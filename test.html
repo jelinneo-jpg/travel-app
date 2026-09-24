@@ -2502,22 +2502,31 @@ function updateTravelBackupTime(){
 }
 
 function travelBackupPanelHTML(){
-  const value=localStorage.getItem("travelLastBackupExportAt");
   return `
-    <section class="travel-backup-card">
-      <div class="travel-backup-title">💾 资料备份</div>
-      <div class="travel-backup-note">
-        📤「导出资料」会把目前旅行资料保存成 JSON 备份文件。<br><br>
-        📥「导入 / 恢复资料」会用你选择的备份文件恢复旅行资料，导入前会再次要求确认。
-      </div>
-      <button class="travel-backup-button" onclick="exportTravelBackup()">📤 导出资料</button>
-      <button class="travel-backup-button" onclick="chooseTravelBackup()">📂 导入 / 恢复资料</button>
-      <input id="travelBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="importTravelBackupFile(this)">
-      <div class="travel-backup-time" id="travelLastBackupTime">
-        上次导出备份：${formatTravelBackupTime(value)}
-      </div>
-    </section>
+    <div style="margin:0 16px 14px;">
+      <button class="small-action" style="font-weight:700;" onclick="openTravelBackupModal()">💾 资料备份</button>
+    </div>
+    <input id="travelBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="importTravelBackupFile(this)">
   `;
+}
+
+function openTravelBackupModal(){
+  const value=localStorage.getItem("travelLastBackupExportAt");
+  document.getElementById("modalTitle").textContent="💾 资料备份";
+  document.getElementById("formArea").innerHTML=`
+    <div class="travel-backup-note">
+      📤「导出资料」会把目前旅行资料保存成 JSON 备份文件。<br><br>
+      📥「导入 / 恢复资料」会用你选择的备份文件恢复旅行资料，导入前会再次要求确认。
+    </div>
+    <button type="button" class="travel-backup-button" onclick="exportTravelBackup()">📤 导出资料</button>
+    <button type="button" class="travel-backup-button" onclick="chooseTravelBackup()">📂 导入 / 恢复资料</button>
+    <div class="travel-backup-time" id="travelLastBackupTime">
+      上次导出备份：${formatTravelBackupTime(value)}
+    </div>
+  `;
+  const saveButton=document.getElementById("saveButton");
+  if(saveButton) saveButton.style.display="none";
+  document.getElementById("modalOverlay").classList.add("show");
 }
 
 function chooseTravelBackup(){
@@ -7076,6 +7085,9 @@ function memberSelect(
 ========================================================= */
 
 function closeModal() {
+  const backupSaveButton=document.getElementById("saveButton");
+  if(backupSaveButton) backupSaveButton.style.display="";
+
 
   document.getElementById(
     "modalOverlay"
