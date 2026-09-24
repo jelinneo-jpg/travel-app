@@ -1459,13 +1459,19 @@ function setCloudStatus(text, ok=false){
 }
 
 async function cloudSave(trip){
-  if(!trip) return false;
+  // 多 Trip 修正版：Supabase 的 shared-trip 这一行保存「全部 Trips」，
+  // 不再只保存当前 Trip，避免新增旅行后覆盖旧旅行。
   cloudWriteInProgress = true;
   const now=new Date().toISOString();
-  const data={...trip, shareToken:FIXED_SHARE_TOKEN};
+  ensureLocalShareTokens();
+  const data={
+    __multiTrip:true,
+    version:2,
+    trips:JSON.parse(JSON.stringify(Array.isArray(trips)?trips:[])),
+    shareToken:FIXED_SHARE_TOKEN
+  };
   const body={trip_id:SHARED_TRIP_ID, share_token:FIXED_SHARE_TOKEN, data, updated_at:now};
   try{
-    // 先 PATCH 现有共享行；不存在时才 INSERT。避免 upsert 被 RLS/冲突检查挡住。
     const existing=await cloudFetch("/travel_trips?select=trip_id&trip_id=eq."+encodeURIComponent(SHARED_TRIP_ID),{method:"GET"},FIXED_SHARE_TOKEN);
     if(existing && existing.length){
       const rows=await cloudFetch("/travel_trips?trip_id=eq."+encodeURIComponent(SHARED_TRIP_ID),{
@@ -1478,7 +1484,7 @@ async function cloudSave(trip){
       },FIXED_SHARE_TOKEN);
       if(rows&&rows[0]) lastCloudUpdatedAt=rows[0].updated_at || now;
     }
-    cloudReady=true; setCloudStatus("☁️ 已同步",true); return true;
+    cloudReady=true; setCloudStatus("☁️ 全部 Trips 已同步",true); return true;
   }catch(e){
     console.error("Supabase 保存失败:",e); setCloudStatus("☁️ 同步失败，请检查 Supabase",false); return false;
   }finally{
@@ -1486,16 +1492,31 @@ async function cloudSave(trip){
   }
 }
 
+function cloudDataToTrips(data){
+  // 新格式：{ __multiTrip:true, trips:[...] }
+  if(data && Array.isArray(data.trips)){
+    return JSON.parse(JSON.stringify(data.trips));
+  }
+  // 兼容旧格式：以前 shared-trip 的 data 直接就是一个 Trip。
+  if(data && data.id){
+    return [JSON.parse(JSON.stringify(data))];
+  }
+  return [];
+}
+
 async function cloudLoad(){
   try{
     const rows=await cloudFetch("/travel_trips?select=trip_id,share_token,data,updated_at&trip_id=eq."+encodeURIComponent(SHARED_TRIP_ID),{method:"GET"},FIXED_SHARE_TOKEN);
     if(!rows||!rows.length) return false;
-    const row=rows[0], trip=row.data;
-    if(!trip) return false;
-    trip.shareToken=FIXED_SHARE_TOKEN;
-    trips=[trip]; currentTripId=trip.id; lastCloudUpdatedAt=row.updated_at || null;
+    const row=rows[0];
+    const cloudTrips=cloudDataToTrips(row.data);
+    if(!cloudTrips.length) return false;
+    trips=cloudTrips;
+    ensureLocalShareTokens();
+    currentTripId=trips[0]?.id ?? null;
+    lastCloudUpdatedAt=row.updated_at || null;
     try{localStorage.setItem("travelTrips",JSON.stringify(trips));}catch(e){}
-    cloudReady=true; setCloudStatus("☁️ 已连接共享资料",true); return true;
+    cloudReady=true; setCloudStatus("☁️ 已连接全部旅行资料",true); return true;
   }catch(e){ console.error("Supabase 读取失败:",e); setCloudStatus("☁️ 读取失败，请检查 Supabase",false); return false; }
 }
 
@@ -1507,23 +1528,29 @@ async function cloudRefresh(){
     cloudReady = true;
     const row=rows[0];
     if(lastCloudUpdatedAt && String(row.updated_at)===String(lastCloudUpdatedAt)) return;
-    const trip=row.data; if(!trip) return;
-    trip.shareToken=FIXED_SHARE_TOKEN; trips=[trip]; currentTripId=trip.id; lastCloudUpdatedAt=row.updated_at || null;
+    const cloudTrips=cloudDataToTrips(row.data);
+    if(!cloudTrips.length) return;
+
+    const oldCurrentId=currentTripId;
+    trips=cloudTrips;
+    ensureLocalShareTokens();
+    currentTripId=trips.some(t=>String(t.id)===String(oldCurrentId)) ? oldCurrentId : (trips[0]?.id ?? null);
+    lastCloudUpdatedAt=row.updated_at || null;
     try{localStorage.setItem("travelTrips",JSON.stringify(trips));}catch(e){}
     if(typeof renderHome==="function") renderHome();
     if(typeof renderCurrentPage==="function") renderCurrentPage();
     if(typeof render==="function") render();
-    setCloudStatus("☁️ 已取得最新资料",true);
+    setCloudStatus("☁️ 已取得全部 Trips 最新资料",true);
   } catch(e){ console.error("云端同步失败:",e); console.error("错误详细信息:", e?.message, e?.stack); setCloudStatus("☁️ 同步失败，请检查 Supabase",false); }
 }
+
 function startSharePolling(){
   if(sharePollTimer) clearInterval(sharePollTimer);
   sharePollTimer=setInterval(cloudRefresh,3000);
 }
 function shareTrip(){
   setCloudStatus("☁️ 共享资料已启用",true); startSharePolling();
-  const trip=(typeof getCurrentTrip==="function") ? getCurrentTrip() : null;
-  if(trip) cloudSave(trip);
+  cloudSave();
   alert("大家使用同一个网址即可共享同一份旅行资料，不需要分享链接。");
 }
 function addShareButton(){
@@ -2554,7 +2581,7 @@ async function importTravelBackupFile(input){
 
     // 只有用户明确执行「导入」时，才把恢复后的资料写回云端。
     if(trips[0]){
-      const saved=await cloudSave(trips[0]);
+      const saved=await cloudSave();
       if(!saved){
         setCloudStatus("💾 已导入本机；云端恢复失败",false);
       }else{
@@ -5994,9 +6021,7 @@ async function deleteTrip(id) {
       trips[0].id;
 
     const saved =
-      await cloudSave(
-        trips[0]
-      );
+      await cloudSave();
 
     if (!saved) {
 
