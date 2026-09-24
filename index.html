@@ -1160,6 +1160,14 @@ body.password-locked .app {
   box-shadow: 0 10px 35px rgba(120,80,60,.10);
   border: 1px solid #f4e6df;
 }
+.password-login-photo {
+  display: block;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 16px;
+  object-fit: cover;
+  border-radius: 22px;
+}
 .password-icon { font-size: 42px; margin-bottom: 8px; }
 .password-title {
   margin: 0 0 22px;
@@ -1206,6 +1214,7 @@ body.password-locked .app {
 
 <div id="passwordGate">
   <div class="password-card">
+    <img class="password-login-photo" src="travel-login.png" alt="旅行">
     <div class="password-icon">🔒</div>
     <h2 class="password-title">请输入密码才能进入 ❤️</h2>
     <form id="passwordForm" autocomplete="off">
