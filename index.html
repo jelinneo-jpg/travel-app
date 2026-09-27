@@ -1251,6 +1251,10 @@ body.password-locked .app {
   font-size: 12px;
 }
 
+/* ===== 购票时间：仅交通 / 景点 ===== */
+.ticket-sale-box{margin-top:9px;padding:10px 12px;border-radius:12px;background:#fff6f1;color:#8a5f50;font-size:13px;line-height:1.65}
+.ticket-sale-countdown{font-weight:800;color:#c9744f}
+.ticket-calendar-button{margin-top:7px;padding:7px 10px;border-radius:9px;border:1px solid #f1cdbb;background:#fff;color:#c9744f;font-size:12px;font-weight:700}
 </style>
 
 </head>
@@ -4055,6 +4059,10 @@ function renderItemView(
   }
 
 
+  if (type === "transport" || (type === "places" && item.category === "scenic")) {
+    info += renderTicketSaleBox(item,type);
+  }
+
   if (item.place) {
 
     info += `
@@ -4625,6 +4633,70 @@ function addToItinerary(
 
 
 /* =========================================================
+   购票时间 / 倒数 / Calendar
+========================================================= */
+function getTicketSaleDate(item){
+  if(!item?.ticketSaleDate) return null;
+  const time=item.ticketSaleTime || "00:00";
+  const d=new Date(item.ticketSaleDate+"T"+time+":00");
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function getTicketCountdownText(item){
+  const d=getTicketSaleDate(item);
+  if(!d) return "";
+  let diff=d.getTime()-Date.now();
+  if(diff<=0) return "🎟️ 已开票";
+  const days=Math.floor(diff/86400000); diff%=86400000;
+  const hours=Math.floor(diff/3600000); diff%=3600000;
+  const mins=Math.floor(diff/60000);
+  const secs=Math.floor((diff%60000)/1000);
+  if(days>0) return `⏳ 距离开票还有 ${days}天 ${hours}小时 ${mins}分钟`;
+  if(hours>0) return `⏳ 距离开票还有 ${hours}小时 ${mins}分钟`;
+  return `⏳ 距离开票还有 ${mins}分钟 ${secs}秒`;
+}
+
+function renderTicketSaleBox(item,type){
+  const allowed=type==="transport" || (type==="places" && item?.category==="scenic");
+  if(!allowed || !item?.ticketSaleDate) return "";
+  const when=`${formatDate(item.ticketSaleDate)}${item.ticketSaleTime ? " "+escapeHTML(item.ticketSaleTime) : ""}`;
+  return `<div class="ticket-sale-box">🎫 购票时间：${when}<br><span class="ticket-sale-countdown" data-ticket-id="${escapeHTML(item.id)}" data-ticket-type="${escapeHTML(type)}">${getTicketCountdownText(item)}</span><br><button class="ticket-calendar-button" onclick="event.stopPropagation();addTicketSaleToCalendar('${type}',${JSON.stringify(item.id)})">📅 加入 Calendar</button></div>`;
+}
+
+function refreshTicketCountdowns(){
+  document.querySelectorAll('.ticket-sale-countdown').forEach(el=>{
+    const trip=getCurrentTrip(); if(!trip) return;
+    const type=el.dataset.ticketType;
+    const item=(trip[type]||[]).find(x=>String(x.id)===String(el.dataset.ticketId));
+    if(item) el.textContent=getTicketCountdownText(item);
+  });
+}
+setInterval(refreshTicketCountdowns,1000);
+
+function icsEscape(v){return String(v||"").replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");}
+function icsLocalStamp(date,time){return String(date||"").replace(/-/g,"")+"T"+String(time||"00:00").replace(/:/g,"")+"00";}
+function addTicketSaleToCalendar(type,id){
+  const trip=getCurrentTrip(); if(!trip) return;
+  const item=(trip[type]||[]).find(x=>String(x.id)===String(id));
+  if(!item?.ticketSaleDate) return;
+  const start=new Date(item.ticketSaleDate+"T"+(item.ticketSaleTime||"00:00")+":00");
+  const end=new Date(start.getTime()+30*60000);
+  const pad=n=>String(n).padStart(2,"0");
+  const stamp=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const title=`${item.name||"旅行项目"}｜开票`;
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Travel App//Ticket Sale//ZH-CN","BEGIN:VEVENT",`UID:ticket-${item.id}-${Date.now()}@travel-app`,`DTSTAMP:${stamp(new Date())}`,`DTSTART:${stamp(start)}`,`DTEND:${stamp(end)}`,`SUMMARY:${icsEscape(title)}`,`DESCRIPTION:${icsEscape("购票时间提醒"+(item.place?"｜"+item.place:""))}`,"BEGIN:VALARM","TRIGGER:-PT10M","ACTION:DISPLAY",`DESCRIPTION:${icsEscape(title)}`,"END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download=(item.name||"购票时间")+"-开票.ics"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+
+function togglePlacesTicketFields(){
+  const cat=document.getElementById("fCategory");
+  const box=document.getElementById("placesTicketFields");
+  if(box) box.style.display=(cat && cat.value==="scenic") ? "block" : "none";
+}
+
+/* =========================================================
    Render Item
 ========================================================= */
 
@@ -5122,6 +5194,8 @@ function renderItem(
 
 
         ${dateArea}
+
+        ${renderTicketSaleBox(item,type)}
 
       </div>
 
@@ -6579,6 +6653,18 @@ function buildForm(
       <div class="form-row">
 
         <div>
+          <label>购票日期</label>
+          <input type="date" id="fTicketSaleDate" value="${item?.ticketSaleDate || ""}">
+        </div>
+        <div>
+          <label>购票时间</label>
+          <input type="time" id="fTicketSaleTime" value="${item?.ticketSaleTime || ""}">
+        </div>
+      </div>
+
+      <div class="form-row">
+
+        <div>
 
           <label>
             出发时间
@@ -6676,7 +6762,7 @@ function buildForm(
         分类
       </label>
 
-      <select id="fCategory">
+      <select id="fCategory" onchange="togglePlacesTicketFields()">
 
         <option
           value="food"
@@ -6782,6 +6868,19 @@ function buildForm(
 
       </div>
 
+
+      <div id="placesTicketFields" style="${category === "scenic" ? "display:block" : "display:none"}">
+        <div class="form-row">
+          <div>
+            <label>购票日期</label>
+            <input type="date" id="fTicketSaleDate" value="${item?.ticketSaleDate || ""}">
+          </div>
+          <div>
+            <label>购票时间</label>
+            <input type="time" id="fTicketSaleTime" value="${item?.ticketSaleTime || ""}">
+          </div>
+        </div>
+      </div>
 
       <label>
         谁负责 / 添加
@@ -8284,6 +8383,12 @@ function saveItem() {
           "fEndTime"
         ).value,
 
+      ticketSaleDate:
+        document.getElementById("fTicketSaleDate")?.value || "",
+
+      ticketSaleTime:
+        document.getElementById("fTicketSaleTime")?.value || "",
+
       member:
         document.getElementById(
           "fMember"
@@ -8356,6 +8461,14 @@ function saveItem() {
         document.getElementById(
           "fTime"
         ).value,
+
+      ticketSaleDate:
+        document.getElementById("fCategory").value === "scenic"
+        ? (document.getElementById("fTicketSaleDate")?.value || "") : "",
+
+      ticketSaleTime:
+        document.getElementById("fCategory").value === "scenic"
+        ? (document.getElementById("fTicketSaleTime")?.value || "") : "",
 
       member:
         document.getElementById(
