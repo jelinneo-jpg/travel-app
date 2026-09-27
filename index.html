@@ -1253,8 +1253,13 @@ body.password-locked .app {
 
 /* ===== 购票时间：仅交通 / 景点 ===== */
 .ticket-sale-box{margin-top:9px;padding:10px 12px;border-radius:12px;background:#fff6f1;color:#8a5f50;font-size:13px;line-height:1.65}
-.ticket-sale-countdown{font-weight:800;color:#c9744f}
-.ticket-calendar-button{margin-top:7px;padding:7px 10px;border-radius:9px;border:1px solid #f1cdbb;background:#fff;color:#c9744f;font-size:12px;font-weight:700}
+.ticket-sale-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ticket-sale-time{min-width:0}
+.ticket-sale-countdown{display:block;margin-top:2px;font-weight:800;color:#c9744f}
+.ticket-calendar-button{flex-shrink:0;border:0;background:transparent;color:#c9744f;padding:2px 3px;font-size:20px;line-height:1;cursor:pointer}
+.ticket-form-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.ticket-form-row>div{min-width:0}
+.ticket-form-row input{min-width:0;width:100%}
 </style>
 
 </head>
@@ -4660,7 +4665,7 @@ function renderTicketSaleBox(item,type){
   const allowed=type==="transport" || (type==="places" && item?.category==="scenic");
   if(!allowed || !item?.ticketSaleDate) return "";
   const when=`${formatDate(item.ticketSaleDate)}${item.ticketSaleTime ? " "+escapeHTML(item.ticketSaleTime) : ""}`;
-  return `<div class="ticket-sale-box">🎫 购票时间：${when}<br><span class="ticket-sale-countdown" data-ticket-id="${escapeHTML(item.id)}" data-ticket-type="${escapeHTML(type)}">${getTicketCountdownText(item)}</span><br><button class="ticket-calendar-button" onclick="event.stopPropagation();addTicketSaleToCalendar('${type}',${JSON.stringify(item.id)})">📅 加入 Calendar</button></div>`;
+  return `<div class="ticket-sale-box"><div class="ticket-sale-row"><span class="ticket-sale-time">🎫 购票时间：${when}</span><button class="ticket-calendar-button" title="加入 Calendar" aria-label="加入 Calendar" onclick="event.stopPropagation();addTicketSaleToCalendar('${type}',${JSON.stringify(item.id)})">📅</button></div><span class="ticket-sale-countdown" data-ticket-id="${escapeHTML(item.id)}" data-ticket-type="${escapeHTML(type)}">${getTicketCountdownText(item)}</span></div>`;
 }
 
 function refreshTicketCountdowns(){
@@ -6650,7 +6655,7 @@ function buildForm(
         }">
 
 
-      <div class="form-row">
+      <div class="ticket-form-row">
 
         <div>
           <label>购票日期</label>
@@ -6870,7 +6875,7 @@ function buildForm(
 
 
       <div id="placesTicketFields" style="${category === "scenic" ? "display:block" : "display:none"}">
-        <div class="form-row">
+        <div class="ticket-form-row">
           <div>
             <label>购票日期</label>
             <input type="date" id="fTicketSaleDate" value="${item?.ticketSaleDate || ""}">
