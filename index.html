@@ -1108,7 +1108,7 @@ textarea {
 @media (max-width:600px) {
 
   .form-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0,1fr);
   }
 
   .currency-row {
@@ -1127,6 +1127,34 @@ textarea {
     align-items: flex-start;
   }
 
+}
+
+
+/* ===== 表单输入格统一对齐（iPhone / Safari） ===== */
+#formArea,
+#formArea .form-row,
+#formArea .ticket-form-row,
+#formArea .form-row > div,
+#formArea .ticket-form-row > div {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#formArea input,
+#formArea textarea,
+#formArea select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#formArea input[type="date"],
+#formArea input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 
