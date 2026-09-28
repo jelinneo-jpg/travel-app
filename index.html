@@ -4,6 +4,27 @@
 <head>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script>
+/* 刷新时在页面绘制前检查本次浏览器会话是否已经解锁，避免密码页闪现 */
+try {
+  if (sessionStorage.getItem("travelUnlocked") === "1") {
+    document.documentElement.classList.add("travel-session-unlocked");
+  }
+} catch(e) {}
+</script>
+
+<style>
+html.travel-session-unlocked #passwordGate {
+  display: none !important;
+}
+html.travel-session-unlocked body.password-locked .app {
+  display: block !important;
+}
+html.travel-session-unlocked body.password-locked {
+  background: #fff9f5;
+}
+</style>
+
 <meta charset="UTF-8">
 
 <meta
