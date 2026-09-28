@@ -1632,12 +1632,19 @@ function unlockTravel(){
     return;
   }
   if(error) error.textContent="";
+  try{ sessionStorage.setItem("travelUnlocked", "1"); }catch(e){}
   bootShare();
 }
 
 window.addEventListener("load",()=>{
   const form=document.getElementById("passwordForm");
   if(form) form.addEventListener("submit",e=>{ e.preventDefault(); unlockTravel(); });
+
+  // 同一个浏览器分页内已成功输入过密码：刷新后直接进入，不再回密码页。
+  // 关闭分页/浏览器后 sessionStorage 会结束，下次打开仍需输入密码。
+  let alreadyUnlocked = false;
+  try{ alreadyUnlocked = sessionStorage.getItem("travelUnlocked") === "1"; }catch(e){}
+  if(alreadyUnlocked) bootShare();
 });
 
 /* =========================================================
